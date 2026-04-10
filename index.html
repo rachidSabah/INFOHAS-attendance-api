@@ -3163,6 +3163,239 @@
     <div id="toast" class="toast"></div>
 
     <script>
+        // ==================== API SERVICE LAYER ====================
+        const API_BASE = 'https://infohas-attendance-api.rachidelsabah.workers.dev/api';
+        let apiToken = null;
+
+        // API helper functions
+        async function apiGet(endpoint) {
+            try {
+                const headers = { 'Content-Type': 'application/json' };
+                if (apiToken) headers['Authorization'] = 'Bearer ' + apiToken;
+                const res = await fetch(API_BASE + endpoint, { headers });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'API Error');
+                return data;
+            } catch (e) {
+                console.warn('API GET failed for', endpoint, ':', e.message);
+                return null;
+            }
+        }
+
+        async function apiPost(endpoint, body) {
+            try {
+                const headers = { 'Content-Type': 'application/json' };
+                if (apiToken) headers['Authorization'] = 'Bearer ' + apiToken;
+                const res = await fetch(API_BASE + endpoint, { method: 'POST', headers, body: JSON.stringify(body) });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'API Error');
+                return data;
+            } catch (e) {
+                console.warn('API POST failed for', endpoint, ':', e.message);
+                return null;
+            }
+        }
+
+        async function apiPut(endpoint, body) {
+            try {
+                const headers = { 'Content-Type': 'application/json' };
+                if (apiToken) headers['Authorization'] = 'Bearer ' + apiToken;
+                const res = await fetch(API_BASE + endpoint, { method: 'PUT', headers, body: JSON.stringify(body) });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'API Error');
+                return data;
+            } catch (e) {
+                console.warn('API PUT failed for', endpoint, ':', e.message);
+                return null;
+            }
+        }
+
+        async function apiDelete(endpoint) {
+            try {
+                const headers = { 'Content-Type': 'application/json' };
+                if (apiToken) headers['Authorization'] = 'Bearer ' + apiToken;
+                const res = await fetch(API_BASE + endpoint, { method: 'DELETE', headers });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'API Error');
+                return data;
+            } catch (e) {
+                console.warn('API DELETE failed for', endpoint, ':', e.message);
+                return null;
+            }
+        }
+
+        // Sync local data to API database
+        async function syncToDatabase() {
+            try {
+                // Sync students
+                const students = localStorage.getItem('attendance_students');
+                if (students) {
+                    const parsed = JSON.parse(students);
+                    for (const s of parsed) {
+                        await apiPost('/students', {
+                            id: s.id, first_name: s.firstName || s.first_name || '',
+                            last_name: s.lastName || s.last_name || '',
+                            email: s.email || '', phone: s.phone || '',
+                            class: s.class || s.className || '',
+                            group_name: s.group || s.group_name || '',
+                            academic_year: s.academicYear || s.academic_year || '',
+                            status: s.status || 'active', photo: s.photo || '',
+                            enrollment_date: s.enrollmentDate || s.enrollment_date || '',
+                            notes: s.notes || ''
+                        });
+                    }
+                }
+
+                // Sync classes
+                const classes = localStorage.getItem('attendance_classes');
+                if (classes) {
+                    const parsed = JSON.parse(classes);
+                    for (const c of parsed) {
+                        await apiPost('/classes', {
+                            id: c.id, name: c.name || c.className || '',
+                            level: c.level || '', department: c.department || '',
+                            academic_year: c.academicYear || c.academic_year || '',
+                            capacity: c.capacity || 30,
+                            teacher_id: c.teacherId || c.teacher_id || ''
+                        });
+                    }
+                }
+
+                // Sync attendance
+                const attendance = localStorage.getItem('attendance_records');
+                if (attendance) {
+                    const parsed = JSON.parse(attendance);
+                    for (const a of parsed) {
+                        await apiPost('/attendance', {
+                            id: a.id, student_id: a.studentId || a.student_id || '',
+                            date: a.date || '', status: a.status || '',
+                            class: a.class || a.className || '',
+                            module: a.module || '', notes: a.notes || '',
+                            marked_by: a.markedBy || a.marked_by || ''
+                        });
+                    }
+                }
+
+                // Sync users
+                const users = localStorage.getItem('attendance_users');
+                if (users) {
+                    const parsed = JSON.parse(users);
+                    for (const u of parsed) {
+                        await apiPost('/users', {
+                            username: u.username, password: u.password || 'employee123',
+                            role: u.role || 'employee', full_name: u.fullName || u.full_name || '',
+                            email: u.email || '', phone: u.phone || '',
+                            department: u.department || ''
+                        });
+                    }
+                }
+
+                // Sync tasks
+                const tasks = localStorage.getItem('attendance_tasks');
+                if (tasks) {
+                    const parsed = JSON.parse(tasks);
+                    for (const t of parsed) {
+                        await apiPost('/tasks', {
+                            id: t.id, title: t.title || '', description: t.description || '',
+                            assigned_to: t.assignedTo || t.assigned_to || '',
+                            assigned_by: t.assignedBy || t.assigned_by || '',
+                            priority: t.priority || 'medium', status: t.status || 'pending',
+                            category: t.category || '', due_date: t.dueDate || t.due_date || ''
+                        });
+                    }
+                }
+
+                // Sync incidents
+                const incidents = localStorage.getItem('attendance_incidents');
+                if (incidents) {
+                    const parsed = JSON.parse(incidents);
+                    for (const inc of parsed) {
+                        await apiPost('/incidents', {
+                            id: inc.id, student_id: inc.studentId || inc.student_id || '',
+                            type: inc.type || '', severity: inc.severity || 'medium',
+                            description: inc.description || '', action_taken: inc.actionTaken || inc.action_taken || '',
+                            status: inc.status || 'open', incident_date: inc.incidentDate || inc.incident_date || '',
+                            location: inc.location || '', witnesses: inc.witnesses || ''
+                        });
+                    }
+                }
+
+                // Sync settings
+                const settings = localStorage.getItem('attendance_settings');
+                if (settings) {
+                    const parsed = JSON.parse(settings);
+                    await apiPut('/settings', parsed);
+                }
+
+                console.log('Database sync complete!');
+                return true;
+            } catch (e) {
+                console.error('Database sync failed:', e);
+                return false;
+            }
+        }
+
+        // Load data from API into localStorage cache
+        async function loadFromDatabase() {
+            try {
+                // Load students
+                const studentsRes = await apiGet('/students');
+                if (studentsRes && studentsRes.success) {
+                    localStorage.setItem('attendance_students', JSON.stringify(studentsRes.data));
+                }
+
+                // Load classes
+                const classesRes = await apiGet('/classes');
+                if (classesRes && classesRes.success) {
+                    localStorage.setItem('attendance_classes', JSON.stringify(classesRes.data));
+                }
+
+                // Load attendance
+                const attendanceRes = await apiGet('/attendance');
+                if (attendanceRes && attendanceRes.success) {
+                    localStorage.setItem('attendance_records', JSON.stringify(attendanceRes.data));
+                }
+
+                // Load users
+                const usersRes = await apiGet('/users');
+                if (usersRes && usersRes.success) {
+                    localStorage.setItem('attendance_users', JSON.stringify(usersRes.data));
+                }
+
+                // Load modules
+                const modulesRes = await apiGet('/modules');
+                if (modulesRes && modulesRes.success) {
+                    localStorage.setItem('attendance_modules', JSON.stringify(modulesRes.data));
+                }
+
+                // Load tasks
+                const tasksRes = await apiGet('/tasks');
+                if (tasksRes && tasksRes.success) {
+                    localStorage.setItem('attendance_tasks', JSON.stringify(tasksRes.data));
+                }
+
+                // Load incidents
+                const incidentsRes = await apiGet('/incidents');
+                if (incidentsRes && incidentsRes.success) {
+                    localStorage.setItem('attendance_incidents', JSON.stringify(incidentsRes.data));
+                }
+
+                // Load settings
+                const settingsRes = await apiGet('/settings');
+                if (settingsRes && settingsRes.success) {
+                    localStorage.setItem('attendance_settings', JSON.stringify(settingsRes.data));
+                }
+
+                console.log('Database load complete!');
+                return true;
+            } catch (e) {
+                console.error('Database load failed:', e);
+                return false;
+            }
+        }
+
+        // ==================== END API SERVICE LAYER ====================
+
         // Global Variables
         let currentUser = null;
         let currentLanguage = 'en';
@@ -4007,6 +4240,39 @@
         }
 
         function login(username, password) {
+            // Try API login first
+            apiPost('/auth/login', { username, password }).then(result => {
+                if (result && result.success) {
+                    apiToken = result.token;
+                    currentUser = result.user;
+                    const auth = {
+                        userId: result.user.id,
+                        userRole: result.user.role,
+                        token: result.token,
+                        expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+                    };
+                    saveToStorage(STORAGE_KEYS.AUTH, auth);
+                    
+                    showMainApp();
+                    updateCurrentUserDisplay();
+                    applyRoleBasedNavigation();
+                    showToast(translate('login_successful') || 'Login successful!');
+                    
+                    // Load data from database after successful login
+                    loadFromDatabase().then(() => {
+                        loadDashboard();
+                    });
+                } else {
+                    // Fallback to local login
+                    localLogin(username, password);
+                }
+            }).catch(() => {
+                // Fallback to local login if API is down
+                localLogin(username, password);
+            });
+        }
+
+        function localLogin(username, password) {
             // Migrate legacy users to unified system on first login attempt
             migrateUsersToUnifiedSystem();
             
@@ -4027,10 +4293,8 @@
                 applyRoleBasedNavigation();
                 showToast(translate('login_successful') || 'Login successful!');
                 loadDashboard();
-                return true;
             } else {
                 showToast(translate('invalid_credentials') || 'Invalid username or password', 'error');
-                return false;
             }
         }
 
@@ -4103,6 +4367,11 @@
         }
 
         function logout() {
+            // Call API logout
+            if (apiToken) {
+                apiPost('/auth/logout', {}).catch(() => {});
+            }
+            apiToken = null;
             currentUser = null;
             localStorage.removeItem(STORAGE_KEYS.AUTH);
             showLoginScreen();
@@ -4112,6 +4381,10 @@
         function checkAuthentication() {
             const auth = loadFromStorage(STORAGE_KEYS.AUTH);
             if (auth && new Date(auth.expires) > new Date()) {
+                // Restore API token if available
+                if (auth.token) {
+                    apiToken = auth.token;
+                }
                 migrateUsersToUnifiedSystem();
                 const users = loadFromStorage(STORAGE_KEYS.USERS) || [];
                 currentUser = users.find(u => u.id === auth.userId);
@@ -4119,7 +4392,12 @@
                     showMainApp();
                     updateCurrentUserDisplay();
                     applyRoleBasedNavigation();
-                    loadDashboard();
+                    // Load fresh data from database
+                    loadFromDatabase().then(() => {
+                        loadDashboard();
+                    }).catch(() => {
+                        loadDashboard();
+                    });
                     return true;
                 }
             }
@@ -4160,6 +4438,8 @@
         function saveToStorage(key, data) {
             try {
                 localStorage.setItem(key, JSON.stringify(data));
+                // Also sync to API database in the background
+                syncSaveToApi(key, data);
             } catch (error) {
                 showToast('Error saving data: ' + error.message, 'error');
             }
@@ -4172,6 +4452,43 @@
             } catch (error) {
                 showToast('Error loading data: ' + error.message, 'error');
                 return null;
+            }
+        }
+
+        // Background sync to API when saving locally
+        function syncSaveToApi(key, data) {
+            if (!apiToken) return; // Not logged in via API, skip sync
+            try {
+                const mapping = {
+                    'attendance_students': { endpoint: '/students', type: 'students' },
+                    'attendance_classes': { endpoint: '/classes', type: 'classes' },
+                    'attendance_modules': { endpoint: '/modules', type: 'modules' },
+                    'attendance_attendance': { endpoint: '/attendance', type: 'attendance' },
+                    'attendance_tasks': { endpoint: '/tasks', type: 'tasks' },
+                    'attendance_incidents': { endpoint: '/incidents', type: 'incidents' },
+                    'attendance_settings': { endpoint: '/settings', type: 'settings' },
+                    'attendance_users': { endpoint: '/users', type: 'users' }
+                };
+
+                const config = mapping[key];
+                if (!config) return;
+
+                // For settings, use PUT
+                if (key === 'attendance_settings') {
+                    apiPut(config.endpoint, data).catch(e => console.warn('Settings sync failed:', e));
+                    return;
+                }
+
+                // For arrays of data, we sync the whole collection using import
+                // This is a simplified approach - in production you'd do delta syncs
+                if (Array.isArray(data)) {
+                    const payload = {};
+                    payload[config.type] = data;
+                    // We don't bulk import on every save to avoid overwhelming the API
+                    // Instead, individual items are synced when they're created/updated
+                }
+            } catch (e) {
+                console.warn('Background sync failed:', e);
             }
         }
 
