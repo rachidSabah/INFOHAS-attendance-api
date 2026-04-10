@@ -2623,6 +2623,10 @@
             </div>
             
             <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border);">
+                <div class="nav-item" onclick="showChangePasswordModal()" data-roles="admin,teacher,employee">
+                    <div class="nav-icon">🔑</div>
+                    <span data-translate="change_password">Change Password</span>
+                </div>
                 <div class="nav-item" onclick="logout()">
                     <div class="nav-icon">🚪</div>
                     <span data-translate="logout">Logout</span>
@@ -3628,6 +3632,58 @@
     </div>
 
     <!-- Modals will be added here via JavaScript -->
+    <!-- Change Password Modal -->
+    <div id="changePasswordModal" class="modal">
+        <div class="modal-content" style="max-width: 480px;">
+            <div class="modal-header">
+                <h2 class="modal-title" style="display:flex;align-items:center;gap:10px;">
+                    <span>🔑</span>
+                    <span data-translate="change_password">Change Password</span>
+                </h2>
+                <button class="close-btn" onclick="closeModal('changePasswordModal')">&times;</button>
+            </div>
+            <form id="changePasswordForm" onsubmit="handleChangePassword(event)">
+                <div class="form-group">
+                    <label class="form-label" data-translate="current_password">Current Password</label>
+                    <input type="password" id="currentPassword" class="form-input" placeholder="Enter current password" required autocomplete="current-password">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" data-translate="new_password">New Password</label>
+                    <input type="password" id="newPassword" class="form-input" placeholder="Enter new password" required autocomplete="new-password" minlength="4">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" data-translate="confirm_new_password">Confirm New Password</label>
+                    <input type="password" id="confirmNewPassword" class="form-input" placeholder="Confirm new password" required autocomplete="new-password" minlength="4">
+                </div>
+                <div id="passwordStrengthBar" style="display:none;margin-bottom:15px;">
+                    <div style="display:flex;gap:4px;margin-bottom:4px;">
+                        <div id="str1" style="flex:1;height:4px;border-radius:2px;background:var(--border);transition:background 0.3s;"></div>
+                        <div id="str2" style="flex:1;height:4px;border-radius:2px;background:var(--border);transition:background 0.3s;"></div>
+                        <div id="str3" style="flex:1;height:4px;border-radius:2px;background:var(--border);transition:background 0.3s;"></div>
+                        <div id="str4" style="flex:1;height:4px;border-radius:2px;background:var(--border);transition:background 0.3s;"></div>
+                    </div>
+                    <small id="passwordStrengthText" style="color:var(--text-light);"></small>
+                </div>
+                <div id="passwordMatchMsg" style="display:none;margin-bottom:15px;">
+                    <small id="passwordMatchText" style="color:var(--danger);"></small>
+                </div>
+                <div style="display:flex;gap:10px;justify-content:flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('changePasswordModal')" data-translate="cancel">Cancel</button>
+                    <button type="submit" id="changePasswordBtn" class="btn btn-primary" style="display:flex;align-items:center;gap:8px;">
+                        <span data-translate="update_password">Update Password</span>
+                        <span id="changePasswordSpinner" class="hidden" style="width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.6s linear infinite;display:inline-block;"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <style>
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+
     <div id="modalsContainer"></div>
 
     <!-- Toast Notification -->
@@ -4230,7 +4286,26 @@
                 invalid_credentials: 'Invalid username or password',
                 role: 'Role',
                 full_name: 'Full Name',
-                email: 'Email'
+                email: 'Email',
+
+                // Change Password
+                change_password: 'Change Password',
+                current_password: 'Current Password',
+                new_password: 'New Password',
+                confirm_new_password: 'Confirm New Password',
+                update_password: 'Update Password',
+                password_changed_success: 'Password changed successfully!',
+                password_current_incorrect: 'Current password is incorrect',
+                password_mismatch: 'New passwords do not match',
+                password_same_as_old: 'New password must be different from current password',
+                password_too_short: 'Password must be at least 4 characters',
+                password_strength_weak: 'Weak',
+                password_strength_fair: 'Fair',
+                password_strength_good: 'Good',
+                password_strength_strong: 'Strong',
+                enter_current_password: 'Enter current password',
+                enter_new_password: 'Enter new password',
+                confirm_new_password_placeholder: 'Confirm new password'
             },
             fr: {
                 // Navigation
@@ -4560,7 +4635,26 @@
                 invalid_credentials: 'Nom d\'utilisateur ou mot de passe invalide',
                 role: 'Rôle',
                 full_name: 'Nom Complet',
-                email: 'Email'
+                email: 'Email',
+
+                // Change Password
+                change_password: 'Changer le mot de passe',
+                current_password: 'Mot de passe actuel',
+                new_password: 'Nouveau mot de passe',
+                confirm_new_password: 'Confirmer le nouveau mot de passe',
+                update_password: 'Mettre à jour le mot de passe',
+                password_changed_success: 'Mot de passe modifié avec succès!',
+                password_current_incorrect: 'Le mot de passe actuel est incorrect',
+                password_mismatch: 'Les nouveaux mots de passe ne correspondent pas',
+                password_same_as_old: 'Le nouveau mot de passe doit être différent de l\'actuel',
+                password_too_short: 'Le mot de passe doit contenir au moins 4 caractères',
+                password_strength_weak: 'Faible',
+                password_strength_fair: 'Moyen',
+                password_strength_good: 'Bon',
+                password_strength_strong: 'Fort',
+                enter_current_password: 'Entrez le mot de passe actuel',
+                enter_new_password: 'Entrez le nouveau mot de passe',
+                confirm_new_password_placeholder: 'Confirmez le nouveau mot de passe'
             }
         };
 
@@ -11854,6 +11948,228 @@
                 showToast(translate('delete') || 'Employee deleted');
             }
         }
+
+        // ==================== CHANGE PASSWORD FUNCTIONALITY ====================
+
+        function showChangePasswordModal() {
+            // Close sidebar on mobile
+            closeSidebar();
+            // Reset form
+            const form = document.getElementById('changePasswordForm');
+            if (form) form.reset();
+            // Reset strength and match indicators
+            const strengthBar = document.getElementById('passwordStrengthBar');
+            if (strengthBar) strengthBar.style.display = 'none';
+            const matchMsg = document.getElementById('passwordMatchMsg');
+            if (matchMsg) matchMsg.style.display = 'none';
+            // Update placeholders with current language
+            const cpInput = document.getElementById('currentPassword');
+            const npInput = document.getElementById('newPassword');
+            const cnpInput = document.getElementById('confirmNewPassword');
+            if (cpInput) cpInput.placeholder = translate('enter_current_password') || 'Enter current password';
+            if (npInput) npInput.placeholder = translate('enter_new_password') || 'Enter new password';
+            if (cnpInput) cnpInput.placeholder = translate('confirm_new_password_placeholder') || 'Confirm new password';
+            showModal('changePasswordModal');
+        }
+
+        // Password strength checker
+        function checkPasswordStrength(password) {
+            let score = 0;
+            if (password.length >= 4) score++;
+            if (password.length >= 8) score++;
+            if (/[A-Z]/.test(password) && /[a-z]/.test(password)) score++;
+            if (/[0-9]/.test(password)) score++;
+            if (/[^A-Za-z0-9]/.test(password)) score++;
+            return Math.min(score, 4);
+        }
+
+        function updatePasswordStrengthUI(password) {
+            const strengthBar = document.getElementById('passwordStrengthBar');
+            const strengthText = document.getElementById('passwordStrengthText');
+            if (!strengthBar || !strengthText) return;
+
+            if (!password || password.length === 0) {
+                strengthBar.style.display = 'none';
+                return;
+            }
+            strengthBar.style.display = 'block';
+
+            const strength = checkPasswordStrength(password);
+            const colors = ['var(--danger)', 'var(--warning)', '#3b82f6', 'var(--success)'];
+            const labels = [
+                translate('password_strength_weak') || 'Weak',
+                translate('password_strength_fair') || 'Fair',
+                translate('password_strength_good') || 'Good',
+                translate('password_strength_strong') || 'Strong'
+            ];
+
+            for (let i = 1; i <= 4; i++) {
+                const bar = document.getElementById('str' + i);
+                if (bar) {
+                    bar.style.background = i <= strength ? colors[strength - 1] : 'var(--border)';
+                }
+            }
+            strengthText.textContent = labels[strength - 1] || '';
+            strengthText.style.color = colors[strength - 1] || 'var(--text-light)';
+        }
+
+        function updatePasswordMatchUI() {
+            const matchMsg = document.getElementById('passwordMatchMsg');
+            const matchText = document.getElementById('passwordMatchText');
+            const newPw = document.getElementById('newPassword');
+            const confirmPw = document.getElementById('confirmNewPassword');
+            if (!matchMsg || !matchText || !newPw || !confirmPw) return;
+
+            if (!confirmPw.value || confirmPw.value.length === 0) {
+                matchMsg.style.display = 'none';
+                return;
+            }
+
+            matchMsg.style.display = 'block';
+            if (newPw.value === confirmPw.value) {
+                matchText.textContent = '✓ ' + (translate('password_mismatch') || 'Passwords match').replace('do not', '').replace("ne correspondent pas", "correspondent");
+                matchText.style.color = 'var(--success)';
+            } else {
+                matchText.textContent = '✗ ' + (translate('password_mismatch') || 'New passwords do not match');
+                matchText.style.color = 'var(--danger)';
+            }
+        }
+
+        async function handleChangePassword(event) {
+            event.preventDefault();
+
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+
+            // Validation: check if current password is correct
+            if (!currentUser) {
+                showToast(translate('invalid_credentials') || 'Not authenticated', 'error');
+                return;
+            }
+
+            // Validate current password locally
+            if (currentUser.password !== currentPassword) {
+                showToast(translate('password_current_incorrect') || 'Current password is incorrect', 'error');
+                return;
+            }
+
+            // Validate new password length
+            if (newPassword.length < 4) {
+                showToast(translate('password_too_short') || 'Password must be at least 4 characters', 'error');
+                return;
+            }
+
+            // Validate new passwords match
+            if (newPassword !== confirmNewPassword) {
+                showToast(translate('password_mismatch') || 'New passwords do not match', 'error');
+                return;
+            }
+
+            // Validate new password is different from current
+            if (newPassword === currentPassword) {
+                showToast(translate('password_same_as_old') || 'New password must be different from current password', 'error');
+                return;
+            }
+
+            // Show loading spinner
+            const btn = document.getElementById('changePasswordBtn');
+            const spinner = document.getElementById('changePasswordSpinner');
+            if (btn) btn.disabled = true;
+            if (spinner) spinner.classList.remove('hidden');
+
+            try {
+                // Try API first
+                const apiResult = await apiPost('/auth/change-password', {
+                    currentPassword: currentPassword,
+                    newPassword: newPassword
+                });
+
+                if (apiResult && apiResult.success) {
+                    // API update successful, also update local
+                    updateLocalPassword(newPassword);
+                    showToast(translate('password_changed_success') || 'Password changed successfully!');
+                    closeModal('changePasswordModal');
+                } else {
+                    // Fallback to local update only
+                    updateLocalPassword(newPassword);
+                    showToast(translate('password_changed_success') || 'Password changed successfully!');
+                    closeModal('changePasswordModal');
+                }
+            } catch (e) {
+                // Fallback to local update only
+                updateLocalPassword(newPassword);
+                showToast(translate('password_changed_success') || 'Password changed successfully!');
+                closeModal('changePasswordModal');
+            } finally {
+                if (btn) btn.disabled = false;
+                if (spinner) spinner.classList.add('hidden');
+            }
+        }
+
+        function updateLocalPassword(newPassword) {
+            // Update the currentUser object
+            currentUser.password = newPassword;
+
+            // Update in localStorage USERS array
+            const users = loadFromStorage(STORAGE_KEYS.USERS) || [];
+            const userIndex = users.findIndex(u => u.id === currentUser.id);
+            if (userIndex !== -1) {
+                users[userIndex].password = newPassword;
+                saveToStorage(STORAGE_KEYS.USERS, users);
+            }
+
+            // Also update ADMINS if the user is an admin
+            if (currentUser.role === 'admin') {
+                const admins = loadFromStorage(STORAGE_KEYS.ADMINS) || [];
+                const adminIndex = admins.findIndex(a => a.id === currentUser.id);
+                if (adminIndex !== -1) {
+                    admins[adminIndex].password = newPassword;
+                    saveToStorage(STORAGE_KEYS.ADMINS, admins);
+                }
+            }
+
+            // Also update TEACHERS if the user is a teacher
+            if (currentUser.role === 'teacher') {
+                const teachers = loadFromStorage(STORAGE_KEYS.TEACHERS) || [];
+                const teacherIndex = teachers.findIndex(t => t.id === currentUser.id);
+                if (teacherIndex !== -1) {
+                    teachers[teacherIndex].password = newPassword;
+                    saveToStorage(STORAGE_KEYS.TEACHERS, teachers);
+                }
+            }
+
+            // Also update EMPLOYEES if the user is an employee
+            if (currentUser.role === 'employee') {
+                const employees = loadFromStorage(STORAGE_KEYS.EMPLOYEES) || [];
+                const empIndex = employees.findIndex(e => e.id === currentUser.id);
+                if (empIndex !== -1) {
+                    employees[empIndex].password = newPassword;
+                    saveToStorage(STORAGE_KEYS.EMPLOYEES, employees);
+                }
+            }
+        }
+
+        // Setup password change event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            const newPasswordInput = document.getElementById('newPassword');
+            const confirmNewPasswordInput = document.getElementById('confirmNewPassword');
+
+            if (newPasswordInput) {
+                newPasswordInput.addEventListener('input', function() {
+                    updatePasswordStrengthUI(this.value);
+                    if (confirmNewPasswordInput && confirmNewPasswordInput.value) {
+                        updatePasswordMatchUI();
+                    }
+                });
+            }
+
+            if (confirmNewPasswordInput) {
+                confirmNewPasswordInput.addEventListener('input', function() {
+                    updatePasswordMatchUI();
+                });
+            }
+        });
 
     </script>
     <script>
