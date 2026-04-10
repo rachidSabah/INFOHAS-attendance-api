@@ -1358,17 +1358,535 @@
             font-weight: 500;
         }
 
-        @media (max-width: 768px) {
+        .toast.warning { background: var(--warning); }
+
+        /* ============================================
+           HAMBURGER BUTTON - Hidden on desktop
+           ============================================ */
+        .hamburger-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text);
+            padding: 4px 8px;
+            border-radius: 8px;
+            transition: background 0.2s;
+            line-height: 1;
+        }
+        .hamburger-btn:hover {
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        /* ============================================
+           SIDEBAR OVERLAY - Hidden by default
+           ============================================ */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9998;
+            transition: opacity 0.3s ease;
+        }
+
+        /* ============================================
+           COMPREHENSIVE RESPONSIVE DESIGN SYSTEM
+           ============================================ */
+
+        /* ---- TABLETS: 768px - 1023px ---- */
+        @media (max-width: 1023px) {
+            /* Sidebar: hidden by default, slides in when toggled */
+            .sidebar {
+                position: fixed;
+                left: -280px;
+                top: 0;
+                width: 280px;
+                height: 100vh;
+                z-index: 9999;
+                transition: left 0.3s ease;
+                box-shadow: none;
+            }
+            .sidebar-open .sidebar {
+                left: 0;
+                box-shadow: 4px 0 25px rgba(0,0,0,0.2);
+            }
+            .sidebar-open .sidebar-overlay {
+                display: block;
+            }
+
+            /* Show hamburger button on tablet and below */
+            .hamburger-btn {
+                display: block;
+            }
+
+            /* Main content takes full width */
+            .main-content {
+                padding: 15px;
+            }
+
+            /* Header adjustments */
+            .header {
+                padding: 15px;
+            }
+            .page-title {
+                font-size: 22px;
+            }
+
+            /* Stats grid: 2 columns on tablet */
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 15px;
+            }
+
+            /* Charts: single column on tablet */
             .charts-container {
                 grid-template-columns: 1fr;
             }
-            
+
+            /* Data stats */
             .data-stats {
                 grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
                 gap: 15px;
             }
+
+            /* Feature grid */
+            .feature-grid {
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            }
+
+            /* Calendar compact */
+            .calendar-day {
+                padding: 10px 6px;
+                min-height: 65px;
+            }
+            .day-number {
+                font-size: 12px;
+            }
+
+            /* Modal adjustments for tablet */
+            .modal-content {
+                width: 90%;
+                padding: 25px;
+            }
         }
-        .toast.warning { background: var(--warning); }
+
+        /* ---- LARGE PHONES: 481px - 767px ---- */
+        @media (max-width: 767px) {
+            /* Header: controls wrap */
+            .header {
+                flex-wrap: wrap;
+                gap: 10px;
+                padding: 12px;
+            }
+            .page-title {
+                font-size: 20px;
+                flex: 1;
+                min-width: 0;
+            }
+            .header-controls {
+                flex-wrap: wrap;
+                gap: 6px;
+                width: 100%;
+            }
+
+            /* Language toggle compact */
+            .language-toggle {
+                padding: 2px;
+            }
+            .lang-btn {
+                padding: 6px 10px;
+                font-size: 11px;
+                min-width: 32px;
+            }
+
+            /* Export button: icon only on phone */
+            .header-controls .btn-primary .btn-text-mobile-hide,
+            .header-controls .btn-primary [data-translate="export"] {
+                display: none;
+            }
+
+            /* Stats grid: 2 columns on large phone */
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 12px;
+            }
+            .stat-card {
+                padding: 16px;
+                border-radius: 12px;
+            }
+            .stat-info h3 {
+                font-size: 24px;
+            }
+            .stat-icon {
+                width: 45px;
+                height: 45px;
+                font-size: 18px;
+                border-radius: 12px;
+            }
+
+            /* Tables: horizontal scroll, smaller font */
+            .table {
+                font-size: 13px;
+            }
+            .table th, .table td {
+                padding: 10px 12px;
+            }
+
+            /* Cards: full width, reduced padding */
+            .card {
+                padding: 15px;
+                border-radius: 12px;
+            }
+            .card-header {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            .card-title {
+                font-size: 16px;
+            }
+
+            /* Search/Filter: stack vertically */
+            .search-filter {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+            .search-box {
+                min-width: 100%;
+            }
+
+            /* Calendar compact */
+            .calendar-container {
+                padding: 12px;
+            }
+            .calendar-header {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            .calendar-day {
+                padding: 6px 4px;
+                min-height: 55px;
+            }
+            .day-number {
+                font-size: 11px;
+            }
+            .attendance-indicator {
+                width: 6px;
+                height: 6px;
+            }
+
+            /* Feature grid: single column */
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+
+            /* Modal: near-full width */
+            .modal-content {
+                width: 95%;
+                padding: 20px;
+                border-radius: 16px;
+            }
+            .modal-title {
+                font-size: 20px;
+            }
+
+            /* Toast: full-width at top */
+            .toast {
+                left: 10px;
+                right: 10px;
+                top: 10px;
+                transform: translateY(-120px);
+                border-radius: 10px;
+            }
+            .toast.show {
+                transform: translateY(0);
+            }
+
+            /* Login page */
+            .login-card {
+                padding: 25px;
+                max-width: 100%;
+            }
+            .login-logo {
+                width: 90px;
+                height: 90px;
+            }
+            .login-title {
+                font-size: 20px;
+                margin-bottom: 20px;
+            }
+
+            /* Forms */
+            .form-group {
+                margin-bottom: 15px;
+            }
+
+            /* Photo upload smaller */
+            .photo-upload {
+                padding: 15px;
+            }
+            .photo-preview {
+                width: 70px;
+                height: 70px;
+            }
+
+            /* Import modal adjustments */
+            .import-tabs {
+                flex-wrap: wrap;
+                gap: 5px;
+            }
+            .tab-btn {
+                padding: 8px 14px;
+                font-size: 13px;
+            }
+            .file-upload-area {
+                padding: 25px;
+            }
+
+            /* Nav items: touch-friendly */
+            .nav-item {
+                padding: 14px 16px;
+                min-height: 44px;
+            }
+
+            /* Action buttons wrap */
+            .action-buttons {
+                flex-wrap: wrap;
+            }
+            .btn {
+                padding: 8px 14px;
+                font-size: 13px;
+            }
+
+            /* Task/incident cards */
+            .task-header, .incident-card > div:first-child {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+        }
+
+        /* ---- SMALL PHONES: 320px - 480px ---- */
+        @media (max-width: 480px) {
+            /* Header adjustments */
+            .header {
+                padding: 10px;
+                border-radius: 12px;
+            }
+            .page-title {
+                font-size: 18px;
+                gap: 6px;
+            }
+            .hamburger-btn {
+                font-size: 22px;
+                padding: 2px 6px;
+            }
+
+            /* Stats grid: 1 column on small phone */
+            .stats-grid {
+                grid-template-columns: 1fr !important;
+                gap: 10px;
+            }
+            .stat-card {
+                padding: 14px;
+            }
+            .stat-info h3 {
+                font-size: 22px;
+            }
+            .stat-info p {
+                font-size: 12px;
+            }
+            .stat-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+                border-radius: 10px;
+            }
+
+            /* Tables: compact */
+            .table {
+                font-size: 12px;
+            }
+            .table th, .table td {
+                padding: 8px 10px;
+            }
+
+            /* Cards: full-width, minimal padding */
+            .card {
+                padding: 12px;
+                border-radius: 10px;
+                margin-bottom: 15px;
+            }
+            .card:hover {
+                transform: none;
+            }
+            .card-title {
+                font-size: 15px;
+            }
+
+            /* Modal: full-screen on small phone */
+            .modal {
+                padding: 0;
+            }
+            .modal-content {
+                width: 100%;
+                height: 100%;
+                max-height: 100vh;
+                border-radius: 0;
+                padding: 15px;
+            }
+            .modal-header {
+                margin-bottom: 15px;
+                padding-bottom: 10px;
+            }
+            .modal-title {
+                font-size: 18px;
+            }
+            .close-btn {
+                width: 44px;
+                height: 44px;
+                font-size: 24px;
+            }
+
+            /* Calendar: very compact */
+            .calendar-container {
+                padding: 8px;
+                border-radius: 10px;
+            }
+            .calendar-day {
+                padding: 4px 2px;
+                min-height: 42px;
+            }
+            .day-number {
+                font-size: 10px;
+            }
+            .attendance-indicator {
+                width: 5px;
+                height: 5px;
+            }
+            .calendar-nav {
+                gap: 5px;
+            }
+
+            /* Login page: compact */
+            .login-card {
+                padding: 20px;
+                border-radius: 16px;
+            }
+            .login-logo {
+                width: 80px;
+                height: 80px;
+                border-radius: 16px;
+            }
+            .login-title {
+                font-size: 18px;
+                margin-bottom: 15px;
+            }
+
+            /* Forms: compact */
+            .form-input, .form-select, .form-textarea {
+                padding: 10px 14px;
+                font-size: 16px; /* Prevent zoom on iOS */
+                border-radius: 10px;
+            }
+            .form-group {
+                margin-bottom: 12px;
+            }
+
+            /* Photo upload: small */
+            .photo-upload {
+                padding: 10px;
+            }
+            .photo-preview {
+                width: 60px;
+                height: 60px;
+            }
+
+            /* Buttons: compact */
+            .btn {
+                padding: 8px 12px;
+                font-size: 12px;
+                border-radius: 10px;
+            }
+            .btn-sm {
+                padding: 6px 10px;
+                font-size: 11px;
+            }
+
+            /* Attendance buttons */
+            .attendance-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
+            }
+
+            /* Toast notifications */
+            .toast {
+                left: 5px;
+                right: 5px;
+                top: 5px;
+                padding: 12px 15px;
+                font-size: 13px;
+                border-radius: 8px;
+            }
+
+            /* Search input */
+            .search-box input {
+                font-size: 16px; /* Prevent iOS zoom */
+            }
+
+            /* Badges */
+            .badge {
+                padding: 3px 8px;
+                font-size: 10px;
+            }
+
+            /* Import modal */
+            .file-upload-area {
+                padding: 15px;
+            }
+            .import-tabs {
+                flex-wrap: wrap;
+                gap: 4px;
+            }
+            .tab-btn {
+                padding: 6px 10px;
+                font-size: 12px;
+            }
+
+            /* Color picker */
+            .color-picker-dropdown {
+                min-width: 160px;
+                padding: 8px;
+            }
+            .color-option {
+                padding: 6px 10px;
+                font-size: 12px;
+            }
+
+            /* Tabs */
+            .tabs {
+                flex-wrap: wrap;
+            }
+            .tab {
+                padding: 10px 14px;
+                font-size: 13px;
+            }
+
+            /* Editor toolbar */
+            .editor-toolbar {
+                padding: 6px;
+                gap: 3px;
+            }
+            .editor-btn {
+                padding: 6px 8px;
+                font-size: 11px;
+            }
+        }
 
         /* Animation Classes */
         .fade-in {
@@ -1443,56 +1961,7 @@
             color: var(--text);
         }
 
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .container {
-                flex-direction: column;
-            }
-
-            .sidebar {
-                width: 100%;
-                padding: 15px;
-                height: auto;
-            }
-
-            .nav-item {
-                justify-content: center;
-                flex-direction: column;
-                text-align: center;
-                gap: 5px;
-                padding: 10px;
-            }
-
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .search-filter {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .header {
-                flex-direction: column;
-                gap: 15px;
-                text-align: center;
-            }
-
-            .modal-content {
-                margin: 10px;
-                padding: 20px;
-                max-width: none;
-            }
-
-            .calendar-grid {
-                font-size: 12px;
-            }
-
-            .calendar-day {
-                min-height: 60px;
-                padding: 8px 5px;
-            }
-        }
+        /* Old responsive block replaced by comprehensive responsive system above */
 
         /* Loading Spinner */
         .spinner {
@@ -2080,6 +2549,7 @@
     <!-- Main Application -->
     <div id="mainApp" class="container hidden">
         <!-- Sidebar -->
+        <div class="sidebar-overlay" onclick="closeSidebar()"></div>
         <nav class="sidebar">
             <div class="logo-container">
                 <img id="schoolLogoDisplay" class="school-logo hidden" alt="School Logo">
@@ -2164,6 +2634,7 @@
         <main class="main-content">
             <!-- Header -->
             <header class="header">
+                <button class="hamburger-btn" onclick="toggleSidebar()">☰</button>
                 <h1 class="page-title" id="pageTitle">
                     <span id="pageTitleIcon">📊</span>
                     <span id="pageTitleText" data-translate="dashboard">Dashboard</span>
@@ -11384,6 +11855,23 @@
             }
         }
 
+    </script>
+    <script>
+        // Responsive sidebar toggle functions
+        function toggleSidebar() {
+            document.querySelector('.container').classList.toggle('sidebar-open');
+        }
+        function closeSidebar() {
+            document.querySelector('.container').classList.remove('sidebar-open');
+        }
+        // Close sidebar when clicking nav items on mobile
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.nav-item[data-page]').forEach(function(item) {
+                item.addEventListener('click', function() {
+                    closeSidebar();
+                });
+            });
+        });
     </script>
 </body>
 </html>
