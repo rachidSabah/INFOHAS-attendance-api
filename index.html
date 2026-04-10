@@ -4260,7 +4260,7 @@
         function toggleColorPicker() {
             const dropdown = document.getElementById('colorPickerDropdown');
             const wrapper = document.querySelector('.color-picker-wrapper');
-            const isVisible = dropdown.style.display !== 'none';
+            const isVisible = dropdown.style.display === 'flex';
             if (isVisible) {
                 dropdown.style.display = 'none';
             } else {
@@ -4271,14 +4271,16 @@
                 dropdown.style.display = 'flex';
                 updateColorPickerActive();
             }
+            // Stop event from bubbling to document click handler
+            event.stopPropagation();
         }
 
         // Close color picker when clicking outside
         document.addEventListener('click', function(e) {
             const dropdown = document.getElementById('colorPickerDropdown');
-            const wrapper = document.querySelector('.color-picker-wrapper');
-            if (dropdown && wrapper && dropdown.style.display !== 'none') {
-                if (!wrapper.contains(e.target) && !dropdown.contains(e.target)) {
+            if (dropdown && dropdown.style.display === 'flex') {
+                // If click is not inside the dropdown, close it
+                if (!dropdown.contains(e.target)) {
                     dropdown.style.display = 'none';
                 }
             }
