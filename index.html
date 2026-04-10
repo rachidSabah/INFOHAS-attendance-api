@@ -2174,43 +2174,7 @@
                         <button class="lang-btn" data-lang="fr">FR</button>
                     </div>
                     <button class="theme-toggle btn btn-secondary btn-sm" onclick="toggleTheme()">🌙</button>
-                    <div class="color-picker-wrapper" style="position:relative;">
-                        <button class="btn btn-secondary btn-sm" onclick="toggleColorPicker()" title="Change Color Theme">🎨</button>
-                        <div id="colorPickerDropdown" class="color-picker-dropdown" style="display:none;">
-                            <div class="color-option" data-theme="purple" onclick="setColorTheme('purple')" title="Purple">
-                                <div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#8b5cf6,#7c3aed);"></div>
-                                <span>Purple</span>
-                            </div>
-                            <div class="color-option" data-theme="blue" onclick="setColorTheme('blue')" title="Blue">
-                                <div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#2563eb);"></div>
-                                <span>Blue</span>
-                            </div>
-                            <div class="color-option" data-theme="teal" onclick="setColorTheme('teal')" title="Teal">
-                                <div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#14b8a6,#0d9488);"></div>
-                                <span>Teal</span>
-                            </div>
-                            <div class="color-option" data-theme="green" onclick="setColorTheme('green')" title="Green">
-                                <div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#22c55e,#16a34a);"></div>
-                                <span>Green</span>
-                            </div>
-                            <div class="color-option" data-theme="orange" onclick="setColorTheme('orange')" title="Orange">
-                                <div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#f97316,#ea580c);"></div>
-                                <span>Orange</span>
-                            </div>
-                            <div class="color-option" data-theme="red" onclick="setColorTheme('red')" title="Red">
-                                <div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#ef4444,#dc2626);"></div>
-                                <span>Red</span>
-                            </div>
-                            <div class="color-option" data-theme="pink" onclick="setColorTheme('pink')" title="Pink">
-                                <div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#ec4899,#db2777);"></div>
-                                <span>Pink</span>
-                            </div>
-                            <div class="color-option" data-theme="indigo" onclick="setColorTheme('indigo')" title="Indigo">
-                                <div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#4f46e5);"></div>
-                                <span>Indigo</span>
-                            </div>
-                        </div>
-                    </div>
+                    <button id="colorPickerBtn" class="btn btn-secondary btn-sm" title="Change Color Theme">🎨</button>
                     <button class="btn btn-primary btn-sm" onclick="showExportModal()">📄 <span data-translate="export">Export</span></button>
                 </div>
             </header>
@@ -3987,6 +3951,11 @@
                 });
             });
             
+            // Color picker button
+            document.getElementById('colorPickerBtn')?.addEventListener('click', function(e) {
+                toggleColorPicker(e);
+            });
+            
             // Search inputs
             document.getElementById('studentSearch')?.addEventListener('input', filterStudents);
             document.getElementById('moduleSearch')?.addEventListener('input', filterModules);
@@ -4256,33 +4225,74 @@
         // Color Theme Switcher
         const COLOR_THEMES = ['purple', 'blue', 'teal', 'green', 'orange', 'red', 'pink', 'indigo'];
         let currentColorTheme = 'purple';
+        let colorPickerOpen = false;
 
-        function toggleColorPicker() {
-            const dropdown = document.getElementById('colorPickerDropdown');
-            const wrapper = document.querySelector('.color-picker-wrapper');
-            const isVisible = dropdown.style.display === 'flex';
-            if (isVisible) {
-                dropdown.style.display = 'none';
-            } else {
-                // Position the dropdown below the button using fixed positioning
-                const rect = wrapper.getBoundingClientRect();
-                dropdown.style.top = (rect.bottom + 8) + 'px';
-                dropdown.style.left = Math.max(8, rect.left - 100) + 'px';
-                dropdown.style.display = 'flex';
-                updateColorPickerActive();
-            }
-            // Stop event from bubbling to document click handler
-            event.stopPropagation();
+        // Create the dropdown element once and append to body
+        function createColorPickerDropdown() {
+            let dropdown = document.getElementById('colorPickerDropdown');
+            if (dropdown) return dropdown; // already created
+
+            dropdown = document.createElement('div');
+            dropdown.id = 'colorPickerDropdown';
+            dropdown.className = 'color-picker-dropdown';
+            dropdown.style.display = 'none';
+
+            const colors = [
+                { theme: 'purple', label: 'Purple', grad: '#8b5cf6,#7c3aed' },
+                { theme: 'blue', label: 'Blue', grad: '#3b82f6,#2563eb' },
+                { theme: 'teal', label: 'Teal', grad: '#14b8a6,#0d9488' },
+                { theme: 'green', label: 'Green', grad: '#22c55e,#16a34a' },
+                { theme: 'orange', label: 'Orange', grad: '#f97316,#ea580c' },
+                { theme: 'red', label: 'Red', grad: '#ef4444,#dc2626' },
+                { theme: 'pink', label: 'Pink', grad: '#ec4899,#db2777' },
+                { theme: 'indigo', label: 'Indigo', grad: '#6366f1,#4f46e5' }
+            ];
+
+            colors.forEach(c => {
+                const opt = document.createElement('div');
+                opt.className = 'color-option';
+                opt.dataset.theme = c.theme;
+                opt.title = c.label;
+                opt.innerHTML = '<div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,' + c.grad + ');"></div><span>' + c.label + '</span>';
+                opt.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    setColorTheme(c.theme);
+                });
+                dropdown.appendChild(opt);
+            });
+
+            document.body.appendChild(dropdown);
+            return dropdown;
         }
 
-        // Close color picker when clicking outside
+        function toggleColorPicker(e) {
+            if (e) e.stopPropagation();
+            const dropdown = createColorPickerDropdown();
+            const btn = document.getElementById('colorPickerBtn');
+
+            if (colorPickerOpen) {
+                dropdown.style.display = 'none';
+                colorPickerOpen = false;
+            } else {
+                // Position the dropdown below the button
+                const rect = btn.getBoundingClientRect();
+                dropdown.style.top = (rect.bottom + 8) + 'px';
+                // Align right edge of dropdown with right edge of button
+                dropdown.style.left = Math.max(8, rect.right - 180) + 'px';
+                dropdown.style.display = 'flex';
+                colorPickerOpen = true;
+                updateColorPickerActive();
+            }
+        }
+
+        // Close color picker when clicking outside (single handler)
         document.addEventListener('click', function(e) {
+            if (!colorPickerOpen) return;
             const dropdown = document.getElementById('colorPickerDropdown');
-            if (dropdown && dropdown.style.display === 'flex') {
-                // If click is not inside the dropdown, close it
-                if (!dropdown.contains(e.target)) {
-                    dropdown.style.display = 'none';
-                }
+            const btn = document.getElementById('colorPickerBtn');
+            if (dropdown && btn && !dropdown.contains(e.target) && e.target !== btn) {
+                dropdown.style.display = 'none';
+                colorPickerOpen = false;
             }
         });
 
@@ -4301,7 +4311,9 @@
             saveToStorage(STORAGE_KEYS.SETTINGS, settings);
 
             updateColorPickerActive();
-            document.getElementById('colorPickerDropdown').style.display = 'none';
+            const dropdown = document.getElementById('colorPickerDropdown');
+            if (dropdown) dropdown.style.display = 'none';
+            colorPickerOpen = false;
             showToast(translate('color_theme_changed') || 'Color theme changed!');
         }
 
@@ -4319,15 +4331,6 @@
                 document.body.classList.add('theme-' + currentColorTheme);
             }
         }
-
-        // Close color picker when clicking outside
-        document.addEventListener('click', function(e) {
-            const wrapper = document.querySelector('.color-picker-wrapper');
-            const dropdown = document.getElementById('colorPickerDropdown');
-            if (wrapper && dropdown && !wrapper.contains(e.target)) {
-                dropdown.style.display = 'none';
-            }
-        });
 
         // Toast Notifications
         function showToast(message, type = 'success') {
