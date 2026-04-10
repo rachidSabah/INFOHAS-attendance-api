@@ -89,6 +89,37 @@ export default {
       return jsonResponse({ success: true });
     }
 
+    // Change Password - requires authentication
+    if (path === '/api/auth/change-password' && method === 'POST') {
+      const session = await authenticate(request, env);
+      if (!session) {
+        return errorResponse('Unauthorized', 401);
+      }
+      try {
+        const { currentPassword, newPassword } = await request.json();
+        if (!currentPassword || !newPassword) {
+          return errorResponse('Current password and new password are required');
+        }
+        if (newPassword.length < 4) {
+          return errorResponse('New password must be at least 4 characters');
+        }
+
+        // Verify current password
+        const user = await env.DB.prepare('SELECT * FROM users WHERE id = ?').bind(session.user_id).first();
+        if (!user || user.password !== currentPassword) {
+          return errorResponse('Current password is incorrect', 401);
+        }
+
+        // Update password in database
+        await env.DB.prepare('UPDATE users SET password = ?, updated_at = datetime("now") WHERE id = ?')
+          .bind(newPassword, session.user_id).run();
+
+        return jsonResponse({ success: true, message: 'Password changed successfully' });
+      } catch (e) {
+        return errorResponse('Failed to change password: ' + e.message, 500);
+      }
+    }
+
     // ==================== AUTHENTICATED ROUTES ====================
     const session = await authenticate(request, env);
     if (!session && !path.startsWith('/api/auth/')) {
