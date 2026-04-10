@@ -478,6 +478,9 @@
             padding: 20px;
             border-radius: 16px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 100;
+            overflow: visible;
         }
 
         .dark-mode .header {
@@ -1988,20 +1991,26 @@
 
         /* Color Picker Dropdown */
         .color-picker-dropdown {
-            position: absolute;
-            top: 45px;
-            right: 0;
+            position: fixed;
+            top: auto;
+            right: auto;
             background: rgba(255, 255, 255, 0.98);
             backdrop-filter: blur(20px);
             border-radius: 16px;
             padding: 12px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             border: 1px solid var(--border);
-            z-index: 100;
-            min-width: 160px;
+            z-index: 99999;
+            min-width: 180px;
             display: flex;
             flex-direction: column;
             gap: 4px;
+            animation: colorPickerFadeIn 0.2s ease;
+        }
+
+        @keyframes colorPickerFadeIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .dark-mode .color-picker-dropdown {
@@ -4250,12 +4259,30 @@
 
         function toggleColorPicker() {
             const dropdown = document.getElementById('colorPickerDropdown');
+            const wrapper = document.querySelector('.color-picker-wrapper');
             const isVisible = dropdown.style.display !== 'none';
-            dropdown.style.display = isVisible ? 'none' : 'flex';
-            if (!isVisible) {
+            if (isVisible) {
+                dropdown.style.display = 'none';
+            } else {
+                // Position the dropdown below the button using fixed positioning
+                const rect = wrapper.getBoundingClientRect();
+                dropdown.style.top = (rect.bottom + 8) + 'px';
+                dropdown.style.left = Math.max(8, rect.left - 100) + 'px';
+                dropdown.style.display = 'flex';
                 updateColorPickerActive();
             }
         }
+
+        // Close color picker when clicking outside
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('colorPickerDropdown');
+            const wrapper = document.querySelector('.color-picker-wrapper');
+            if (dropdown && wrapper && dropdown.style.display !== 'none') {
+                if (!wrapper.contains(e.target) && !dropdown.contains(e.target)) {
+                    dropdown.style.display = 'none';
+                }
+            }
+        });
 
         function setColorTheme(theme) {
             if (!COLOR_THEMES.includes(theme)) return;
