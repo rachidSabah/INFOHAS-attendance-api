@@ -2776,6 +2776,139 @@
         .theme-red { --primary: #ef4444; --primary-dark: #dc2626; --purple-bg: #f87171; --purple-light: #fca5a5; --purple-dark: #dc2626; }
         .theme-pink { --primary: #ec4899; --primary-dark: #db2777; --purple-bg: #f472b6; --purple-light: #f9a8d4; --purple-dark: #db2777; }
         .theme-indigo { --primary: #6366f1; --primary-dark: #4338ca; --purple-bg: #818cf8; --purple-light: #a5b4fc; --purple-dark: #4338ca; }
+
+        /* ===== Keyboard Shortcuts Overlay ===== */
+        .shortcuts-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+        .shortcuts-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .shortcuts-panel {
+            background: var(--card-bg, #fff);
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 560px;
+            width: 92%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+            transform: translateY(20px);
+            transition: transform 0.25s ease;
+        }
+        .shortcuts-overlay.active .shortcuts-panel {
+            transform: translateY(0);
+        }
+        .shortcuts-panel h2 {
+            margin: 0 0 6px 0;
+            font-size: 1.4rem;
+            color: var(--text-dark, #1f2937);
+        }
+        .shortcuts-panel .shortcuts-subtitle {
+            color: var(--text-light, #6b7280);
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+        .shortcuts-group {
+            margin-bottom: 18px;
+        }
+        .shortcuts-group-title {
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--primary);
+            margin-bottom: 8px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid var(--border, #e5e7eb);
+        }
+        .shortcut-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 0;
+        }
+        .shortcut-label {
+            color: var(--text-dark, #1f2937);
+            font-size: 0.92rem;
+        }
+        .shortcut-keys {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+        .kbd {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 28px;
+            height: 26px;
+            padding: 0 7px;
+            font-size: 0.78rem;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-weight: 600;
+            color: var(--text-dark, #1f2937);
+            background: var(--bg, #f3f4f6);
+            border: 1px solid var(--border, #d1d5db);
+            border-bottom-width: 2px;
+            border-radius: 5px;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.06);
+        }
+        .dark-mode .shortcuts-panel {
+            background: #1e293b;
+        }
+        .dark-mode .shortcuts-panel h2 {
+            color: #e2e8f0;
+        }
+        .dark-mode .shortcuts-panel .shortcuts-subtitle {
+            color: #94a3b8;
+        }
+        .dark-mode .shortcut-label {
+            color: #e2e8f0;
+        }
+        .dark-mode .kbd {
+            color: #e2e8f0;
+            background: #334155;
+            border-color: #475569;
+        }
+        .shortcut-hint {
+            position: fixed;
+            bottom: 12px;
+            right: 12px;
+            background: var(--card-bg, #fff);
+            border: 1px solid var(--border, #e5e7eb);
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 0.78rem;
+            color: var(--text-light, #6b7280);
+            z-index: 9999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+        .shortcut-hint:hover { opacity: 1; }
+        .shortcut-hint .kbd {
+            font-size: 0.72rem;
+            min-width: 22px;
+            height: 22px;
+            padding: 0 5px;
+        }
+        .dark-mode .shortcut-hint {
+            background: #1e293b;
+            border-color: #334155;
+            color: #94a3b8;
+        }
     </style>
 </head>
 <body>
@@ -3974,6 +4107,45 @@
     <!-- Toast Notification -->
     <div id="toast" class="toast"></div>
 
+    <!-- Keyboard Shortcuts Overlay -->
+    <div id="shortcutsOverlay" class="shortcuts-overlay" onclick="if(event.target===this)toggleShortcutsOverlay()">
+        <div class="shortcuts-panel">
+            <h2>⌨️ <span data-translate="keyboard_shortcuts">Keyboard Shortcuts</span></h2>
+            <p class="shortcuts-subtitle" data-translate="shortcuts_subtitle">Navigate faster with these shortcuts</p>
+
+            <div class="shortcuts-group">
+                <div class="shortcuts-group-title" data-translate="shortcuts_navigation">Navigation</div>
+                <div class="shortcut-row"><span class="shortcut-label" data-translate="dashboard">Dashboard</span><span class="shortcut-keys"><span class="kbd">D</span></span></div>
+                <div class="shortcut-row"><span class="shortcut-label" data-translate="students">Students</span><span class="shortcut-keys"><span class="kbd">S</span></span></div>
+                <div class="shortcut-row"><span class="shortcut-label" data-translate="attendance">Attendance</span><span class="shortcut-keys"><span class="kbd">A</span></span></div>
+                <div class="shortcut-row"><span class="shortcut-label" data-translate="calendar">Calendar</span><span class="shortcut-keys"><span class="kbd">C</span></span></div>
+                <div class="shortcut-row"><span class="shortcut-label" data-translate="grades">Grades</span><span class="shortcut-keys"><span class="kbd">G</span></span></div>
+                <div class="shortcut-row"><span class="shortcut-label" data-translate="tasks">Tasks</span><span class="shortcut-keys"><span class="kbd">T</span></span></div>
+                <div class="shortcut-row"><span class="shortcut-label" data-translate="reports">Reports</span><span class="shortcut-keys"><span class="kbd">R</span></span></div>
+                <div class="shortcut-row"><span class="shortcut-label" data-translate="settings">Settings</span><span class="shortcut-keys"><span class="kbd">Shift</span><span class="kbd">S</span></span></div>
+            </div>
+
+            <div class="shortcuts-group">
+                <div class="shortcuts-group-title" data-translate="shortcuts_actions">Quick Actions</div>
+                <div class="shortcut-row"><span class="shortcut-label" data-translate="add_student">Add Student</span><span class="shortcut-keys"><span class="kbd">N</span></span></div>
+                <div class="shortcut-row"><span class="shortcut-label" data-translate="mark_attendance">Mark Attendance</span><span class="shortcut-keys"><span class="kbd">M</span></span></div>
+                <div class="shortcut-row"><span class="shortcut-label" data-translate="shortcuts_global_search">Global Search</span><span class="shortcut-keys"><span class="kbd">Ctrl</span><span class="kbd">K</span></span></div>
+            </div>
+
+            <div class="shortcuts-group">
+                <div class="shortcuts-group-title" data-translate="shortcuts_general">General</div>
+                <div class="shortcut-row"><span class="shortcut-label" data-translate="shortcuts_show_help">Show this help</span><span class="shortcut-keys"><span class="kbd">?</span></span></div>
+                <div class="shortcut-row"><span class="shortcut-label" data-translate="shortcuts_close_modal">Close modal / overlay</span><span class="shortcut-keys"><span class="kbd">Esc</span></span></div>
+                <div class="shortcut-row"><span class="shortcut-label" data-translate="shortcuts_toggle_dark">Toggle dark mode</span><span class="shortcut-keys"><span class="kbd">Shift</span><span class="kbd">D</span></span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shortcut hint badge (bottom-right corner) -->
+    <div class="shortcut-hint" id="shortcutHint" onclick="toggleShortcutsOverlay()">
+        <span class="kbd">?</span> <span data-translate="shortcuts_hint">Shortcuts</span>
+    </div>
+
     <script>
         // ==================== API SERVICE LAYER ====================
         const API_BASE = 'https://infohas-attendance-api.rachidelsabah.workers.dev/api';
@@ -4608,7 +4780,19 @@
                 select_rows_first: 'Please select rows first',
                 rows_assigned: 'row(s) assigned to',
                 no_valid_selected: 'No valid records selected',
-                no_class: 'No class'
+                no_class: 'No class',
+
+                // Keyboard Shortcuts
+                keyboard_shortcuts: 'Keyboard Shortcuts',
+                shortcuts_subtitle: 'Navigate faster with these shortcuts',
+                shortcuts_navigation: 'Navigation',
+                shortcuts_actions: 'Quick Actions',
+                shortcuts_general: 'General',
+                shortcuts_global_search: 'Global Search',
+                shortcuts_show_help: 'Show this help',
+                shortcuts_close_modal: 'Close modal / overlay',
+                shortcuts_toggle_dark: 'Toggle dark mode',
+                shortcuts_hint: 'Shortcuts'
             },
             fr: {
                 // Navigation
@@ -4975,7 +5159,19 @@
                 select_rows_first: 'Veuillez d\'abord sélectionner des lignes',
                 rows_assigned: 'ligne(s) affectée(s) à',
                 no_valid_selected: 'Aucun enregistrement valide sélectionné',
-                no_class: 'Pas de classe'
+                no_class: 'Pas de classe',
+
+                // Raccourcis clavier
+                keyboard_shortcuts: 'Raccourcis clavier',
+                shortcuts_subtitle: 'Naviguez plus rapidement avec ces raccourcis',
+                shortcuts_navigation: 'Navigation',
+                shortcuts_actions: 'Actions rapides',
+                shortcuts_general: 'Général',
+                shortcuts_global_search: 'Recherche globale',
+                shortcuts_show_help: 'Afficher cette aide',
+                shortcuts_close_modal: 'Fermer le modal / overlay',
+                shortcuts_toggle_dark: 'Basculer mode sombre',
+                shortcuts_hint: 'Raccourcis'
             }
         };
 
@@ -12770,6 +12966,140 @@
                 });
             });
         });
+    </script>
+    <script>
+        // ==================== KEYBOARD SHORTCUTS ====================
+        let shortcutsOverlayOpen = false;
+
+        function toggleShortcutsOverlay() {
+            shortcutsOverlayOpen = !shortcutsOverlayOpen;
+            const overlay = document.getElementById('shortcutsOverlay');
+            if (overlay) {
+                overlay.classList.toggle('active', shortcutsOverlayOpen);
+            }
+        }
+
+        function canUseShortcuts() {
+            // Don't trigger shortcuts when typing in inputs/textareas
+            const el = document.activeElement;
+            if (!el) return true;
+            const tag = el.tagName.toLowerCase();
+            if (tag === 'input' || tag === 'textarea' || tag === 'select') return false;
+            if (el.isContentEditable) return false;
+            return true;
+        }
+
+        function isPageAccessible(pageName) {
+            // Check if the current user's role allows access to a page
+            if (!currentUser) return false;
+            const navItem = document.querySelector(`.nav-item[data-page="${pageName}"]`);
+            if (!navItem) return false;
+            const allowedRoles = (navItem.dataset.roles || '').split(',');
+            return allowedRoles.includes(currentUser.role);
+        }
+
+        document.addEventListener('keydown', function(e) {
+            // Escape key - close any open modal or overlay
+            if (e.key === 'Escape') {
+                if (shortcutsOverlayOpen) {
+                    toggleShortcutsOverlay();
+                    return;
+                }
+                // Close any open modal
+                const openModal = document.querySelector('.modal:not(.hidden)');
+                if (openModal) {
+                    openModal.classList.add('hidden');
+                    return;
+                }
+                return;
+            }
+
+            // Ctrl+K - Global search (placeholder for feature #8)
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                const searchInput = document.getElementById('globalSearchInput');
+                if (searchInput) {
+                    searchInput.focus();
+                }
+                return;
+            }
+
+            // Only process single-key shortcuts when not in an input field
+            if (!canUseShortcuts()) return;
+            // Don't trigger when login screen is visible
+            const loginScreen = document.getElementById('loginScreen');
+            if (loginScreen && !loginScreen.classList.contains('hidden')) return;
+
+            // ? key - Show shortcuts overlay
+            if (e.key === '?' || (e.shiftKey && e.key === '/')) {
+                e.preventDefault();
+                toggleShortcutsOverlay();
+                return;
+            }
+
+            // If shortcuts overlay is open, don't process other shortcuts
+            if (shortcutsOverlayOpen) return;
+
+            // Navigation shortcuts
+            if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+                switch(e.key.toLowerCase()) {
+                    case 'd':
+                        if (!e.shiftKey) {
+                            if (isPageAccessible('dashboard')) { e.preventDefault(); showPage('dashboard'); }
+                        } else {
+                            // Shift+D = toggle dark mode
+                            e.preventDefault();
+                            toggleTheme();
+                        }
+                        break;
+                    case 's':
+                        if (!e.shiftKey) {
+                            if (isPageAccessible('students')) { e.preventDefault(); showPage('students'); }
+                        } else {
+                            if (isPageAccessible('settings')) { e.preventDefault(); showPage('settings'); }
+                        }
+                        break;
+                    case 'a':
+                        if (isPageAccessible('attendance')) { e.preventDefault(); showPage('attendance'); }
+                        break;
+                    case 'c':
+                        if (isPageAccessible('calendar')) { e.preventDefault(); showPage('calendar'); }
+                        break;
+                    case 'g':
+                        if (isPageAccessible('grades')) { e.preventDefault(); showPage('grades'); }
+                        break;
+                    case 't':
+                        if (isPageAccessible('tasks')) { e.preventDefault(); showPage('tasks'); }
+                        break;
+                    case 'r':
+                        if (isPageAccessible('reports')) { e.preventDefault(); showPage('reports'); }
+                        break;
+                    case 'n':
+                        // Quick add student
+                        if (isPageAccessible('students')) {
+                            e.preventDefault();
+                            if (typeof showAddStudentModal === 'function') showAddStudentModal();
+                        }
+                        break;
+                    case 'm':
+                        // Go to attendance page (mark attendance)
+                        if (isPageAccessible('attendance')) { e.preventDefault(); showPage('attendance'); }
+                        break;
+                }
+            }
+        });
+
+        // Hide shortcut hint after first use
+        setTimeout(function() {
+            const hint = document.getElementById('shortcutHint');
+            if (hint) {
+                // Auto-hide hint after 10 seconds
+                setTimeout(function() {
+                    hint.style.opacity = '0';
+                    setTimeout(function() { hint.style.display = 'none'; }, 300);
+                }, 10000);
+            }
+        }, 2000);
     </script>
 </body>
 </html>
