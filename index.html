@@ -2778,6 +2778,21 @@
         .theme-indigo { --primary: #6366f1; --primary-dark: #4338ca; --purple-bg: #818cf8; --purple-light: #a5b4fc; --purple-dark: #4338ca; }
 
         /* ===== Student 360 Profile Modal ===== */
+        /* Empty State Illustrations */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 48px 20px;
+            text-align: center;
+        }
+        .empty-state-icon { font-size: 4rem; margin-bottom: 12px; opacity: 0.7; }
+        .empty-state-title { font-size: 1.15rem; font-weight: 700; color: var(--text-dark, #1f2937); margin-bottom: 6px; }
+        .empty-state-text { font-size: 0.9rem; color: var(--text-light, #6b7280); max-width: 360px; line-height: 1.5; margin-bottom: 16px; }
+        .dark-mode .empty-state-title { color: #e2e8f0; }
+        .dark-mode .empty-state-text { color: #94a3b8; }
+
         /* Custom Confirm Dialog */
         .confirm-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px);
@@ -6163,6 +6178,16 @@
             const toast = document.getElementById('undoToast');
             toast.classList.remove('show');
             if (undoTimeout) clearTimeout(undoTimeout);
+        }
+
+        // ===== Empty State Helper =====
+        function renderEmptyState(icon, titleKey, textKey, actionBtn) {
+            return `<div class="empty-state">
+                <div class="empty-state-icon">${icon}</div>
+                <div class="empty-state-title" data-translate="${titleKey}">${translate(titleKey) || titleKey}</div>
+                <div class="empty-state-text" data-translate="${textKey}">${translate(textKey) || textKey}</div>
+                ${actionBtn || ''}
+            </div>`;
         }
 
         // Page Management
