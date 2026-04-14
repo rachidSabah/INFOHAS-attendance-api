@@ -1040,6 +1040,70 @@
             gap: 10px;
             justify-content: flex-end;
         }
+
+        /* Batch Assign Bar */
+        .batch-assign-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            padding: 12px 18px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(99, 102, 241, 0.15));
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 10px;
+            margin-bottom: 12px;
+            animation: slideDown 0.3s ease;
+        }
+        .batch-assign-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .batch-assign-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Batch select checkbox styling in table rows */
+        .batch-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+
+        /* CSV Preview with selection */
+        .csv-preview-table-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        .csv-assign-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px;
+            background: rgba(99, 102, 241, 0.05);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        .csv-assign-section select {
+            min-width: 180px;
+        }
+        .csv-row-checkbox {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
         
         .btn-info {
             background: linear-gradient(135deg, #06b6d4, #0891b2);
@@ -2725,7 +2789,10 @@
                 <div class="card">
                     <div class="card-header">
                         <h2 class="card-title">👥 <span data-translate="students_management">Students Management</span></h2>
-                        <button class="btn btn-primary" onclick="showAddStudentModal()">➕ <span data-translate="add_student">Add Student</span></button>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                            <button class="btn btn-info" onclick="enterBatchSelectMode()" id="batchSelectToggle">☑️ <span data-translate="batch_select">Batch Select</span></button>
+                            <button class="btn btn-primary" onclick="showAddStudentModal()">➕ <span data-translate="add_student">Add Student</span></button>
+                        </div>
                     </div>
                     
                     <div class="search-filter">
@@ -2760,6 +2827,28 @@
                         <button class="btn btn-secondary" onclick="exportStudentsCSV()">📄 <span data-translate="export_csv">Export CSV</span></button>
                         <button class="btn btn-success" onclick="generateStudentsPDF()">📑 <span data-translate="export_pdf">Export PDF</span></button>
                     </div>
+
+                    <!-- Batch Assign Class Bar -->
+                    <div id="batchAssignBar" class="batch-assign-bar" style="display:none;">
+                        <div class="batch-assign-bar-left">
+                            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:500;">
+                                <input type="checkbox" id="selectAllStudents" onchange="toggleSelectAllStudents(this.checked)" style="width:18px;height:18px;cursor:pointer;">
+                                <span data-translate="select_all">Select All</span>
+                            </label>
+                            <span id="selectedStudentCount" style="color:var(--primary);font-weight:600;"></span>
+                        </div>
+                        <div class="batch-assign-bar-right">
+                            <select id="batchClassSelect" class="form-select" style="min-width:180px;">
+                                <option value="">Select Class/Group</option>
+                            </select>
+                            <button class="btn btn-primary" onclick="batchAssignClass()" id="batchAssignBtn" disabled>
+                                🏷️ <span data-translate="assign_to_class">Assign to Class</span>
+                            </button>
+                            <button class="btn btn-secondary" onclick="exitBatchSelectMode()">
+                                ✕ <span data-translate="cancel">Cancel</span>
+                            </button>
+                        </div>
+                    </div>
                     
                     <div class="table-container enhanced-table">
                         <div class="table-loading" id="studentsTableLoading">
@@ -2768,6 +2857,7 @@
                         <table class="table">
                             <thead>
                                 <tr>
+                                    <th class="batch-select-col" style="display:none;width:40px;"><input type="checkbox" id="headerSelectAll" onchange="toggleSelectAllStudents(this.checked)" style="width:16px;height:16px;cursor:pointer;"></th>
                                     <th data-translate="photo">Photo</th>
                                     <th data-translate="name">Name</th>
                                     <th data-translate="student_id">Student ID</th>
