@@ -5284,6 +5284,16 @@
                 recentActivity: 'Recent Activity',
                 settings_saved: 'Dashboard layout saved!',
                 settings_reset: 'Dashboard reset to default!',
+
+                // Attendance Trends/Streaks
+                trends: 'Trends',
+                current_streak: 'Current Streak',
+                best_streak: 'Best Streak',
+                day_streak: 'day streak',
+                best: 'Best',
+                attendance_rate: 'Attendance Rate',
+                last_4_weeks: 'Last 4 Weeks',
+                monthly_summary: 'Monthly Summary',
                 incidents: 'Incidents',
 
                 // Confirm & Undo
@@ -5729,6 +5739,16 @@
                 recentActivity: 'Activité récente',
                 settings_saved: 'Mise en page du tableau de bord enregistrée !',
                 settings_reset: 'Tableau de bord réinitialisé !',
+
+                // Tendances de présence
+                trends: 'Tendances',
+                current_streak: 'Série en cours',
+                best_streak: 'Meilleure série',
+                day_streak: 'jours consécutifs',
+                best: 'Meilleure',
+                attendance_rate: 'Taux de présence',
+                last_4_weeks: '4 dernières semaines',
+                monthly_summary: 'Résumé mensuel',
                 incidents: 'Incidents',
 
                 // Confirmation et annulation
@@ -7327,6 +7347,34 @@
             const excusedDays = studentAttendance.filter(a => a.status === 'excused').length;
             const attendanceRate = totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 0;
 
+            // Attendance streak calculation (consecutive present days from most recent)
+            let currentStreak = 0;
+            const sortedAttendance = [...studentAttendance].sort((a,b) => b.date.localeCompare(a.date));
+            for (const rec of sortedAttendance) {
+                if (rec.status === 'present') currentStreak++;
+                else break;
+            }
+            // Best streak ever
+            let bestStreak = 0, tempStreak = 0;
+            for (const rec of [...studentAttendance].sort((a,b) => a.date.localeCompare(b.date))) {
+                if (rec.status === 'present') { tempStreak++; bestStreak = Math.max(bestStreak, tempStreak); }
+                else { tempStreak = 0; }
+            }
+
+            // Weekly trend (last 4 weeks)
+            const now = new Date();
+            const weeklyTrend = [];
+            for (let w = 3; w >= 0; w--) {
+                const weekEnd = new Date(now); weekEnd.setDate(now.getDate() - w * 7);
+                const weekStart = new Date(weekEnd); weekStart.setDate(weekEnd.getDate() - 6);
+                const ws = weekStart.toISOString().split('T')[0];
+                const we = weekEnd.toISOString().split('T')[0];
+                const weekRecs = studentAttendance.filter(a => a.date >= ws && a.date <= we);
+                const weekPresent = weekRecs.filter(a => a.status === 'present').length;
+                const weekRate = weekRecs.length > 0 ? Math.round((weekPresent / weekRecs.length) * 100) : 0;
+                weeklyTrend.push({ label: `W${4-w}`, rate: weekRate, present: weekPresent, total: weekRecs.length });
+            }
+
             // Grade average
             const validGrades = studentGrades.filter(g => g.percentage && !isNaN(g.percentage));
             const avgGrade = validGrades.length > 0 ? Math.round(validGrades.reduce((s,g) => s + parseFloat(g.percentage), 0) / validGrades.length) : 0;
@@ -7353,6 +7401,8 @@
                         <div class="profile-badges">
                             <span class="badge" style="background:${statusColor};color:white;">${student.status || 'active'}</span>
                             <span class="badge badge-secondary">${student.academicYear || '-'}</span>
+                            ${currentStreak > 0 ? `<span class="badge" style="background:#f59e0b;color:white;">🔥 ${currentStreak} ${translate('day_streak') || 'day streak'}</span>` : ''}
+                            ${bestStreak > 2 ? `<span class="badge" style="background:#8b5cf6;color:white;">⭐ ${translate('best') || 'Best'}: ${bestStreak}</span>` : ''}
                             ${avgGrade > 0 ? `<span class="badge" style="background:#3b82f6;color:white;">Avg: ${avgGrade}%</span>` : ''}
                             ${totalBehaviorPoints !== 0 ? `<span class="badge" style="background:${totalBehaviorPoints > 0 ? '#10b981' : '#ef4444'};color:white;">${totalBehaviorPoints > 0 ? '+' : ''}${totalBehaviorPoints} pts</span>` : ''}
                         </div>
@@ -7386,6 +7436,7 @@
                 <!-- Tabs -->
                 <div class="profile-tabs">
                     <button class="profile-tab active" onclick="switchProfileTab('attendance', this)" data-translate="attendance">Attendance</button>
+                    <button class="profile-tab" onclick="switchProfileTab('trends', this)" data-translate="trends">Trends</button>
                     <button class="profile-tab" onclick="switchProfileTab('grades', this)" data-translate="grades">Grades</button>
                     <button class="profile-tab" onclick="switchProfileTab('behavior', this)" data-translate="behavior">Behavior</button>
                     <button class="profile-tab" onclick="switchProfileTab('incidents', this)" data-translate="incidents">Incidents</button>
@@ -7405,6 +7456,60 @@
                         return `<div class="profile-record-item"><span class="profile-record-date">${a.date}</span><span class="profile-record-detail">${statusBadge[a.status] || '⚪'} ${translate(a.status)}</span></div>`;
                     }).join('') : renderEmptyState('📋', 'no_attendance_records', 'empty_attendance_text')}
                     ${studentAttendance.length > 30 ? `<div style="text-align:center;padding:8px;color:var(--text-light);font-size:0.85rem;">...and ${studentAttendance.length - 30} more records</div>` : ''}
+                </div>
+
+                <!-- Trends Tab -->
+                <div class="profile-tab-content" id="profileTabTrends">
+                    <!-- Streak Cards -->
+                    <div class="profile-stat-row" style="margin-bottom:20px;">
+                        <div class="profile-stat-card psc-rate" style="min-width:120px;">
+                            <div class="stat-num">🔥 ${currentStreak}</div>
+                            <div class="stat-lbl">${translate('current_streak') || 'Current Streak'}</div>
+                        </div>
+                        <div class="profile-stat-card psc-present" style="min-width:120px;">
+                            <div class="stat-num">⭐ ${bestStreak}</div>
+                            <div class="stat-lbl">${translate('best_streak') || 'Best Streak'}</div>
+                        </div>
+                        <div class="profile-stat-card psc-excused" style="min-width:120px;">
+                            <div class="stat-num">${attendanceRate}%</div>
+                            <div class="stat-lbl">${translate('attendance_rate') || 'Attendance Rate'}</div>
+                        </div>
+                    </div>
+                    <!-- Weekly Trend Bars -->
+                    <div style="margin-bottom:8px;font-weight:600;font-size:0.9rem;color:var(--text);" data-translate="last_4_weeks">Last 4 Weeks</div>
+                    <div style="display:flex;gap:12px;align-items:flex-end;height:120px;margin-bottom:20px;">
+                        ${weeklyTrend.map(w => {
+                            const barHeight = Math.max(w.rate, 5);
+                            const barColor = w.rate >= 80 ? '#10b981' : w.rate >= 50 ? '#f59e0b' : '#ef4444';
+                            return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+                                <div style="font-size:0.75rem;font-weight:600;color:var(--text);">${w.rate}%</div>
+                                <div style="width:100%;height:${barHeight}%;background:${barColor};border-radius:6px 6px 0 0;min-height:8px;transition:height 0.5s ease;"></div>
+                                <div style="font-size:0.7rem;color:var(--text-light);">${w.label}</div>
+                            </div>`;
+                        }).join('')}
+                    </div>
+                    <!-- Monthly Summary -->
+                    <div style="font-weight:600;font-size:0.9rem;color:var(--text);margin-bottom:8px;" data-translate="monthly_summary">Monthly Summary</div>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;">
+                        ${(() => {
+                            const monthMap = {};
+                            studentAttendance.forEach(a => {
+                                const m = a.date.substring(0, 7);
+                                if (!monthMap[m]) monthMap[m] = { present: 0, total: 0 };
+                                monthMap[m].total++;
+                                if (a.status === 'present') monthMap[m].present++;
+                            });
+                            return Object.entries(monthMap).sort((a,b) => b[0].localeCompare(a[0])).slice(0, 6).map(([month, data]) => {
+                                const rate = data.total > 0 ? Math.round((data.present / data.total) * 100) : 0;
+                                const color = rate >= 80 ? '#10b981' : rate >= 50 ? '#f59e0b' : '#ef4444';
+                                return `<div style="padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--secondary);">
+                                    <div style="font-size:0.78rem;color:var(--text-light);margin-bottom:4px;">${month}</div>
+                                    <div style="font-size:1.1rem;font-weight:700;color:${color};">${rate}%</div>
+                                    <div style="font-size:0.7rem;color:var(--text-light);">${data.present}/${data.total} ${translate('present') || 'present'}</div>
+                                </div>`;
+                            }).join('') || `<div style="color:var(--text-light);font-size:0.85rem;">${translate('no_attendance_records') || 'No data yet'}</div>`;
+                        })()}
+                    </div>
                 </div>
 
                 <!-- Grades Tab -->
@@ -7445,7 +7550,7 @@
             if (btn) btn.classList.add('active');
             // Update tab contents
             document.querySelectorAll('.profile-tab-content').forEach(c => c.classList.remove('active'));
-            const tabMap = { attendance: 'profileTabAttendance', grades: 'profileTabGrades', behavior: 'profileTabBehavior', incidents: 'profileTabIncidents' };
+            const tabMap = { attendance: 'profileTabAttendance', trends: 'profileTabTrends', grades: 'profileTabGrades', behavior: 'profileTabBehavior', incidents: 'profileTabIncidents' };
             const tabEl = document.getElementById(tabMap[tabName]);
             if (tabEl) tabEl.classList.add('active');
         }
