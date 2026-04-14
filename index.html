@@ -3389,9 +3389,205 @@
         .dark-mode .tour-tooltip-text { color: #94a3b8; }
         .dark-mode .tour-dot { background: #475569; }
         .dark-mode .tour-dot.active { background: #818cf8; }
+
+        /* ===== Bulk Attendance Actions ===== */
+        .bulk-action-bar {
+            display: none;
+            position: sticky;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 500;
+            background: rgba(255,255,255,0.98);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 12px 20px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+            border: 1px solid rgba(99,102,241,0.3);
+            align-items: center;
+            gap: 12px;
+            animation: bulkBarSlideUp 0.3s ease;
+            max-width: 700px;
+            width: 95%;
+            margin: 0 auto;
+        }
+        .bulk-action-bar.active { display: flex; justify-content: center; flex-wrap: wrap; }
+        @keyframes bulkBarSlideUp {
+            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        .bulk-action-bar .bulk-count {
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--primary);
+            white-space: nowrap;
+        }
+        .bulk-action-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            color: white;
+        }
+        .bulk-action-btn:hover { transform: translateY(-1px); }
+        .bulk-action-btn.present { background: var(--success); }
+        .bulk-action-btn.absent { background: var(--danger); }
+        .bulk-action-btn.late { background: var(--warning); color: #1e293b; }
+        .bulk-action-btn.excused { background: var(--text-light); color: white; }
+        .bulk-action-btn.clear { background: transparent; color: var(--text-light); border: 1px solid var(--border); }
+        .bulk-action-btn.clear:hover { background: var(--secondary); }
+        .dark-mode .bulk-action-bar { background: rgba(30,41,59,0.98); }
+        .dark-mode .bulk-action-btn.clear { color: var(--text); border-color: var(--border); }
+        .bulk-checkbox-cell { width: 40px; text-align: center; }
+        .bulk-checkbox-cell input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary); }
+        .bulk-select-controls { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+        .bulk-select-controls .btn { font-size: 0.82rem; padding: 6px 14px; }
+        .quick-card-checkbox { display: flex; align-items: center; margin-right: 8px; }
+        .quick-card-checkbox input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary); }
+
+        /* ===== Student Cards / ID Generator ===== */
+        .student-card-preview {
+            width: 340px;
+            min-height: 200px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6, #a78bfa);
+            color: white;
+            padding: 24px;
+            margin: 0 auto 20px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(99,102,241,0.3);
+        }
+        .student-card-preview::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+        .student-card-preview::after {
+            content: '';
+            position: absolute;
+            bottom: -30%;
+            left: -30%;
+            width: 60%;
+            height: 60%;
+            background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+        .card-school-name { font-size: 1.1rem; font-weight: 700; margin-bottom: 4px; position: relative; z-index: 1; }
+        .card-school-sub { font-size: 0.75rem; opacity: 0.8; margin-bottom: 16px; position: relative; z-index: 1; }
+        .card-student-info { display: flex; gap: 16px; align-items: center; position: relative; z-index: 1; }
+        .card-avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            border: 2px solid rgba(255,255,255,0.4);
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+        .card-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .card-details { flex: 1; }
+        .card-student-name { font-size: 1.15rem; font-weight: 700; margin-bottom: 2px; }
+        .card-student-id { font-size: 0.82rem; opacity: 0.9; margin-bottom: 4px; }
+        .card-student-class { font-size: 0.78rem; opacity: 0.8; }
+        .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; position: relative; z-index: 1; font-size: 0.75rem; opacity: 0.8; }
+        .card-actions { display: flex; gap: 10px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
+        .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; padding: 10px 0; }
+        @media print {
+            .student-card-preview { break-inside: avoid; box-shadow: none; border: 2px solid #6366f1; }
+            .cards-grid { display: block; }
+            .student-card-preview { margin: 10px auto; }
+            .card-actions, .bulk-action-bar, .sidebar, .header { display: none !important; }
+        }
+
+        /* ===== Offline Indicator & Sync Status ===== */
+        .offline-indicator {
+            position: fixed;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 3000;
+            padding: 10px 24px;
+            border-radius: 12px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            animation: offlineSlide 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        .offline-indicator.active { display: flex; }
+        .offline-indicator.offline {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+        .offline-indicator.online {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+        @keyframes offlineSlide {
+            from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        .offline-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: offlinePulse 2s ease-in-out infinite;
+        }
+        @keyframes offlinePulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        .sync-status-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            color: var(--text-light);
+            background: rgba(255,255,255,0.5);
+            margin-left: auto;
+        }
+        .dark-mode .sync-status-bar { background: rgba(30,41,59,0.5); }
+        .sync-status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--success);
+            flex-shrink: 0;
+        }
+        .sync-status-dot.offline { background: var(--danger); }
+        .sync-status-dot.syncing { background: var(--warning); animation: offlinePulse 1s ease-in-out infinite; }
     </style>
 </head>
 <body>
+    <!-- Offline Indicator -->
+    <div id="offlineIndicator" class="offline-indicator">
+        <span class="offline-dot"></span>
+        <span id="offlineText"></span>
+    </div>
+
     <!-- Login Screen -->
     <div id="loginScreen" class="login-container">
         <div class="login-card fade-in">
@@ -3516,6 +3712,10 @@
                     <span id="pageTitleText" data-translate="dashboard">Dashboard</span>
                 </h1>
                 <div class="header-controls">
+                    <div class="sync-status-bar" id="syncStatusBar">
+                        <span class="sync-status-dot" id="syncStatusDot"></span>
+                        <span id="syncStatusText">Online</span>
+                    </div>
                     <div class="language-toggle">
                         <button class="lang-btn active" data-lang="en">EN</button>
                         <button class="lang-btn" data-lang="fr">FR</button>
@@ -3832,6 +4032,7 @@
                         <table class="table">
                             <thead>
                                 <tr>
+                                    <th class="bulk-checkbox-cell"><input type="checkbox" id="bulkSelectAll" onchange="toggleSelectAll(this.checked)" /></th>
                                     <th data-translate="student">Student</th>
                                     <th data-translate="class">Class</th>
                                     <th data-translate="status">Status</th>
@@ -3850,6 +4051,16 @@
                         <div id="attendanceQuickList" class="attendance-quick-list">
                             <!-- Quick mode cards will be loaded here -->
                         </div>
+                    </div>
+
+                    <!-- Bulk Action Bar -->
+                    <div id="bulkActionBar" class="bulk-action-bar">
+                        <span class="bulk-count" id="bulkSelectedCount">0 selected</span>
+                        <button class="bulk-action-btn present" onclick="bulkMarkAttendance('present')">✅ <span data-translate="bulk_mark_present">Mark Present</span></button>
+                        <button class="bulk-action-btn absent" onclick="bulkMarkAttendance('absent')">❌ <span data-translate="bulk_mark_absent">Mark Absent</span></button>
+                        <button class="bulk-action-btn late" onclick="bulkMarkAttendance('late')">⏰ <span data-translate="bulk_mark_late">Mark Late</span></button>
+                        <button class="bulk-action-btn excused" onclick="bulkMarkAttendance('excused')">🛡️ <span data-translate="bulk_mark_excused">Mark Excused</span></button>
+                        <button class="bulk-action-btn clear" onclick="clearBulkSelection()">✕ <span data-translate="bulk_clear">Clear</span></button>
                     </div>
                 </div>
             </div>
@@ -3908,6 +4119,7 @@
                             <option value="" data-translate="all_years">All Years</option>
                         </select>
                         <button class="btn btn-secondary" onclick="exportGradesCSV()">📄 <span data-translate="export_csv">Export CSV</span></button>
+                        <button class="btn btn-primary" onclick="generateClassCards()">🪪 <span data-translate="bulk_generate_cards">Generate Cards for Class</span></button>
                     </div>
                     
                     <div class="table-container">
@@ -4704,6 +4916,23 @@
             </div>
             <div id="studentProfileContent">
                 <!-- Dynamically loaded -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Card Modal -->
+    <div id="studentCardModal" class="modal">
+        <div class="modal-content" style="max-width:500px;">
+            <div class="modal-header">
+                <h2 class="modal-title">🪪 <span data-translate="student_card">Student Card</span></h2>
+                <button class="close-btn" onclick="closeModal('studentCardModal')">&times;</button>
+            </div>
+            <div id="studentCardPreview" class="student-card-preview">
+                <!-- Card will be generated here -->
+            </div>
+            <div class="card-actions">
+                <button class="btn btn-primary" onclick="printStudentCard()">🖨️ <span data-translate="print_card">Print Card</span></button>
+                <button class="btn btn-success" onclick="downloadStudentCard()">📥 <span data-translate="download_card">Download Card</span></button>
             </div>
         </div>
     </div>
@@ -5543,7 +5772,47 @@
                 confirm_delete_class_msg: 'This class will be deleted and students will be unassigned. You can undo this within 6 seconds.',
                 student_deleted: 'Student deleted',
                 class_deleted: 'Class deleted',
-                action_undone: 'Action undone!'
+                action_undone: 'Action undone!',
+
+                // Bulk Attendance Actions
+                bulk_select_all: 'Select All',
+                bulk_deselect_all: 'Deselect All',
+                bulk_selected: 'selected',
+                bulk_mark_present: 'Mark Present',
+                bulk_mark_absent: 'Mark Absent',
+                bulk_mark_late: 'Mark Late',
+                bulk_mark_excused: 'Mark Excused',
+                bulk_clear: 'Clear Selection',
+                bulk_confirm_msg: 'Mark {count} students as {status}?',
+                bulk_success: '{count} students marked as {status}',
+                bulk_none_selected: 'No students selected',
+
+                // Student Cards / ID Generator
+                student_card: 'Student Card',
+                generate_card: 'Generate Card',
+                print_card: 'Print Card',
+                download_card: 'Download Card',
+                card_id: 'Card ID',
+                card_valid_for: 'Valid for',
+                academic_year: 'Academic Year',
+                card_generated: 'Student card generated!',
+                generate_cards: 'Generate Cards',
+                bulk_generate_cards: 'Generate Cards for Class',
+                print_all_cards: 'Print All Cards',
+
+                // Offline Indicator & Sync Status
+                online: 'Online',
+                offline: 'Offline',
+                syncing: 'Syncing...',
+                last_synced: 'Last synced',
+                sync_complete: 'Sync complete',
+                sync_failed: 'Sync failed',
+                pending_changes: 'pending changes',
+                you_are_offline: 'You are offline',
+                offline_message: 'Changes will be saved locally and synced when you reconnect.',
+                back_online: 'Back Online',
+                back_online_message: 'Your data has been synced successfully.',
+                never: 'never'
             },
             fr: {
                 // Navigation
@@ -6036,7 +6305,47 @@
                 confirm_delete_class_msg: 'Cette classe sera supprimée et les étudiants seront désassignés. Vous pouvez annuler dans les 6 secondes.',
                 student_deleted: 'Étudiant supprimé',
                 class_deleted: 'Classe supprimée',
-                action_undone: 'Action annulée !'
+                action_undone: 'Action annulée !',
+
+                // Actions de présence en masse
+                bulk_select_all: 'Tout sélectionner',
+                bulk_deselect_all: 'Tout désélectionner',
+                bulk_selected: 'sélectionné(s)',
+                bulk_mark_present: 'Marquer Présent',
+                bulk_mark_absent: 'Marquer Absent',
+                bulk_mark_late: 'Marquer En Retard',
+                bulk_mark_excused: 'Marquer Excusé',
+                bulk_clear: 'Effacer la sélection',
+                bulk_confirm_msg: 'Marquer {count} étudiants comme {status} ?',
+                bulk_success: '{count} étudiants marqués comme {status}',
+                bulk_none_selected: 'Aucun étudiant sélectionné',
+
+                // Carte d'étudiant / Générateur d'ID
+                student_card: 'Carte étudiant',
+                generate_card: 'Générer la carte',
+                print_card: 'Imprimer la carte',
+                download_card: 'Télécharger la carte',
+                card_id: 'ID Carte',
+                card_valid_for: 'Valide pour',
+                academic_year: 'Année académique',
+                card_generated: 'Carte étudiant générée !',
+                generate_cards: 'Générer les cartes',
+                bulk_generate_cards: 'Générer les cartes pour la classe',
+                print_all_cards: 'Imprimer toutes les cartes',
+
+                // Indicateur hors ligne & État de synchronisation
+                online: 'En ligne',
+                offline: 'Hors ligne',
+                syncing: 'Synchronisation...',
+                last_synced: 'Dernière sync',
+                sync_complete: 'Synchronisation terminée',
+                sync_failed: 'Échec de la synchronisation',
+                pending_changes: 'modifications en attente',
+                you_are_offline: 'Vous êtes hors ligne',
+                offline_message: 'Les modifications seront enregistrées localement et synchronisées lors de la reconnexion.',
+                back_online: 'De retour en ligne',
+                back_online_message: 'Vos données ont été synchronisées avec succès.',
+                never: 'jamais'
             }
         };
 
@@ -8166,6 +8475,7 @@
                     <div style="display:flex;gap:6px;flex-shrink:0;">
                         <button class="btn btn-sm btn-secondary" onclick="editStudent('${student.id}');closeModal('studentProfileModal')">✏️ <span data-translate="edit">Edit</span></button>
                         <button class="btn btn-sm btn-primary" onclick="generateStudentReportPDF('${student.id}')">📄 <span data-translate="report">Report</span></button>
+                        <button class="btn btn-primary btn-sm" onclick="generateStudentCard('${student.id}')">🪪 <span data-translate="generate_card">Generate Card</span></button>
                     </div>
                 </div>
 
@@ -9089,6 +9399,7 @@
 
                 return `
                     <tr>
+                        <td class="bulk-checkbox-cell"><input type="checkbox" class="bulk-student-checkbox" data-student-id="${student.id}" onchange="updateBulkActionBar()" /></td>
                         <td><strong>${student.fullName}</strong><br><small>${student.studentId}</small></td>
                         <td>${studentClass ? studentClass.name : '-'}</td>
                         <td>${status ? statusBadges[status] : '<span class="badge badge-secondary">Not Marked</span>'}</td>
@@ -9116,7 +9427,7 @@
 
             // Show empty state if no students to mark attendance
             if (filteredStudents.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5">${renderEmptyState('📋', 'empty_attendance_title', 'empty_attendance_text', { onclick: "showPage('students')", label: '👤 ' + (translate('empty_attendance_action') || 'Go to Students') })}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6">${renderEmptyState('📋', 'empty_attendance_title', 'empty_attendance_text', { onclick: "showPage('students')", label: '👤 ' + (translate('empty_attendance_action') || 'Go to Students') })}</td></tr>`;
             }
         }
 
@@ -9292,6 +9603,7 @@
 
                 return `
                     <div class="quick-attendance-card ${statusClass}" id="quickCard_${student.id}">
+                        <div class="quick-card-checkbox"><input type="checkbox" class="bulk-student-checkbox" data-student-id="${student.id}" onchange="updateBulkActionBar()" /></div>
                         <div class="quick-card-info">
                             <div class="quick-card-name">${student.fullName}</div>
                             <div class="quick-card-detail">
@@ -15089,6 +15401,213 @@
                 }, 10000);
             }
         }, 2000);
+
+        // ===== Bulk Attendance Actions =====
+        function toggleSelectAll(checked) {
+            document.querySelectorAll('.bulk-student-checkbox').forEach(cb => {
+                cb.checked = checked;
+            });
+            updateBulkActionBar();
+        }
+
+        function updateBulkActionBar() {
+            const checked = document.querySelectorAll('.bulk-student-checkbox:checked');
+            const bar = document.getElementById('bulkActionBar');
+            const countEl = document.getElementById('bulkSelectedCount');
+            if (!bar) return;
+            if (checked.length > 0) {
+                bar.classList.add('active');
+                if (countEl) countEl.textContent = checked.length + ' ' + (translate('bulk_selected') || 'selected');
+            } else {
+                bar.classList.remove('active');
+            }
+            const selectAll = document.getElementById('bulkSelectAll');
+            const allCheckboxes = document.querySelectorAll('.bulk-student-checkbox');
+            if (selectAll) {
+                selectAll.checked = allCheckboxes.length > 0 && checked.length === allCheckboxes.length;
+            }
+        }
+
+        function clearBulkSelection() {
+            document.querySelectorAll('.bulk-student-checkbox').forEach(cb => {
+                cb.checked = false;
+            });
+            const selectAll = document.getElementById('bulkSelectAll');
+            if (selectAll) selectAll.checked = false;
+            updateBulkActionBar();
+        }
+
+        function bulkMarkAttendance(status) {
+            const checked = document.querySelectorAll('.bulk-student-checkbox:checked');
+            if (checked.length === 0) {
+                showToast(translate('bulk_none_selected') || 'No students selected', 'error');
+                return;
+            }
+            const statusLabels = {
+                present: translate('present') || 'Present',
+                absent: translate('absent') || 'Absent',
+                late: translate('late') || 'Late',
+                excused: translate('excused') || 'Excused'
+            };
+            const msg = (translate('bulk_confirm_msg') || 'Mark {count} students as {status}?')
+                .replace('{count}', checked.length)
+                .replace('{status}', statusLabels[status]);
+            if (!confirm(msg)) return;
+            checked.forEach(cb => {
+                markAttendance(cb.dataset.studentId, status);
+            });
+            const successMsg = (translate('bulk_success') || '{count} students marked as {status}')
+                .replace('{count}', checked.length)
+                .replace('{status}', statusLabels[status]);
+            showToast(successMsg);
+            clearBulkSelection();
+        }
+
+        // ===== Student Cards / ID Generator =====
+        let currentCardStudentId = null;
+
+        function generateStudentCard(studentId) {
+            if (!studentId) return;
+            currentCardStudentId = studentId;
+            const students = loadFromStorage(STORAGE_KEYS.STUDENTS) || [];
+            const classes = loadFromStorage(STORAGE_KEYS.CLASSES) || [];
+            const student = students.find(s => s.id === studentId);
+            if (!student) return;
+            const studentClass = classes.find(c => c.id === student.classId);
+            const schoolName = document.querySelector('.school-name')?.textContent || 'INFOHAS';
+            const schoolSub = document.querySelector('.school-subtitle')?.textContent || 'Institut de Formation';
+            const academicYears = loadFromStorage(STORAGE_KEYS.ACADEMIC_YEARS) || [];
+            const currentYear = academicYears.find(y => y.isCurrent) || academicYears[0];
+            const cardId = 'ID-' + (student.studentId || student.id.substring(0, 8)).toUpperCase();
+            const initials = student.fullName ? student.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : '??';
+            const avatarHtml = student.photo ? `<img src="${student.photo}" alt="${student.fullName}">` : initials;
+            const preview = document.getElementById('studentCardPreview');
+            if (preview) {
+                preview.style.width = '';
+                preview.style.maxWidth = '';
+                preview.innerHTML = `
+                    <div class="card-school-name">${schoolName}</div>
+                    <div class="card-school-sub">${schoolSub}</div>
+                    <div class="card-student-info">
+                        <div class="card-avatar">${avatarHtml}</div>
+                        <div class="card-details">
+                            <div class="card-student-name">${student.fullName}</div>
+                            <div class="card-student-id">${cardId}</div>
+                            <div class="card-student-class">${studentClass ? studentClass.name : '-'}</div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <span>${translate('card_valid_for') || 'Valid for'}: ${currentYear ? currentYear.name : (translate('academic_year') || 'Academic Year')}</span>
+                        <span>${new Date().getFullYear()}</span>
+                    </div>
+                `;
+            }
+            showModal('studentCardModal');
+        }
+
+        function printStudentCard() { window.print(); }
+        function downloadStudentCard() {
+            showToast(translate('card_generated') || 'Student card generated!');
+            window.print();
+        }
+
+        function generateClassCards() {
+            const classFilter = document.getElementById('gradeClassFilter')?.value;
+            const students = loadFromStorage(STORAGE_KEYS.STUDENTS) || [];
+            const classes = loadFromStorage(STORAGE_KEYS.CLASSES) || [];
+            const filtered = classFilter ? students.filter(s => s.classId === classFilter) : students;
+            if (filtered.length === 0) {
+                showToast(translate('bulk_none_selected') || 'No students found', 'error');
+                return;
+            }
+            const schoolName = document.querySelector('.school-name')?.textContent || 'INFOHAS';
+            const schoolSub = document.querySelector('.school-subtitle')?.textContent || 'Institut de Formation';
+            const academicYears = loadFromStorage(STORAGE_KEYS.ACADEMIC_YEARS) || [];
+            const currentYear = academicYears.find(y => y.isCurrent) || academicYears[0];
+            const preview = document.getElementById('studentCardPreview');
+            if (preview) {
+                preview.style.width = '100%';
+                preview.style.maxWidth = '100%';
+                preview.innerHTML = `<div class="cards-grid">${filtered.map(student => {
+                    const studentClass = classes.find(c => c.id === student.classId);
+                    const cardId = 'ID-' + (student.studentId || student.id.substring(0, 8)).toUpperCase();
+                    const initials = student.fullName ? student.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : '??';
+                    const avatarHtml = student.photo ? `<img src="${student.photo}" alt="${student.fullName}">` : initials;
+                    return `
+                        <div class="student-card-preview">
+                            <div class="card-school-name">${schoolName}</div>
+                            <div class="card-school-sub">${schoolSub}</div>
+                            <div class="card-student-info">
+                                <div class="card-avatar">${avatarHtml}</div>
+                                <div class="card-details">
+                                    <div class="card-student-name">${student.fullName}</div>
+                                    <div class="card-student-id">${cardId}</div>
+                                    <div class="card-student-class">${studentClass ? studentClass.name : '-'}</div>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <span>${translate('card_valid_for') || 'Valid for'}: ${currentYear ? currentYear.name : 'N/A'}</span>
+                                <span>${new Date().getFullYear()}</span>
+                            </div>
+                        </div>`;
+                }).join('')}</div>`;
+            }
+            showModal('studentCardModal');
+        }
+
+        // ===== Offline Indicator & Sync Status =====
+        const LAST_SYNC_KEY = 'lastSyncTime';
+        let isAppOnline = navigator.onLine;
+
+        function updateOnlineStatus() {
+            const indicator = document.getElementById('offlineIndicator');
+            const offlineText = document.getElementById('offlineText');
+            const syncDot = document.getElementById('syncStatusDot');
+            const syncText = document.getElementById('syncStatusText');
+            isAppOnline = navigator.onLine;
+            if (isAppOnline) {
+                if (indicator) {
+                    indicator.className = 'offline-indicator online active';
+                    if (offlineText) offlineText.textContent = translate('back_online') || 'Back Online';
+                }
+                if (syncDot) syncDot.className = 'sync-status-dot';
+                if (syncText) syncText.textContent = translate('online') || 'Online';
+                localStorage.setItem(LAST_SYNC_KEY, new Date().toISOString());
+                setTimeout(() => { if (indicator) indicator.classList.remove('active'); }, 3000);
+            } else {
+                if (indicator) {
+                    indicator.className = 'offline-indicator offline active';
+                    if (offlineText) offlineText.textContent = translate('you_are_offline') || 'You are offline';
+                }
+                if (syncDot) syncDot.className = 'sync-status-dot offline';
+                if (syncText) syncText.textContent = translate('offline') || 'Offline';
+            }
+            updateLastSyncedTime();
+        }
+
+        function updateLastSyncedTime() {
+            const lastSync = localStorage.getItem(LAST_SYNC_KEY);
+            const syncText = document.getElementById('syncStatusText');
+            if (syncText && isAppOnline) {
+                if (lastSync) {
+                    const date = new Date(lastSync);
+                    const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    syncText.textContent = (translate('last_synced') || 'Last synced') + ' ' + timeStr;
+                } else {
+                    syncText.textContent = translate('online') || 'Online';
+                }
+            }
+        }
+
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+        updateOnlineStatus();
+        setInterval(() => {
+            if (isAppOnline) {
+                localStorage.setItem(LAST_SYNC_KEY, new Date().toISOString());
+                updateLastSyncedTime();
+            }
+        }, 60000);
     </script>
 </body>
 </html>
