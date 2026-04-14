@@ -2784,14 +2784,59 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 48px 20px;
+            padding: 48px 24px;
             text-align: center;
+            animation: emptyFadeIn 0.5s ease;
         }
-        .empty-state-icon { font-size: 4rem; margin-bottom: 12px; opacity: 0.7; }
-        .empty-state-title { font-size: 1.15rem; font-weight: 700; color: var(--text-dark, #1f2937); margin-bottom: 6px; }
-        .empty-state-text { font-size: 0.9rem; color: var(--text-light, #6b7280); max-width: 360px; line-height: 1.5; margin-bottom: 16px; }
+        @keyframes emptyFadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes emptyFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        .empty-state-icon {
+            font-size: 4.5rem;
+            margin-bottom: 16px;
+            opacity: 0.8;
+            animation: emptyFloat 3s ease-in-out infinite;
+        }
+        .empty-state-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-dark, #1f2937);
+            margin-bottom: 6px;
+        }
+        .empty-state-text {
+            font-size: 0.9rem;
+            color: var(--text-light, #6b7280);
+            max-width: 380px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        .empty-state-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 24px;
+            border-radius: 12px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 4px 15px rgba(99,102,241,0.3);
+        }
+        .empty-state-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(99,102,241,0.4);
+        }
         .dark-mode .empty-state-title { color: #e2e8f0; }
         .dark-mode .empty-state-text { color: #94a3b8; }
+        .dark-mode .empty-state-icon { opacity: 0.7; }
 
         /* Custom Confirm Dialog */
         .confirm-overlay {
@@ -5145,6 +5190,40 @@
                 no_grades: 'No grades recorded',
                 no_behavior_records: 'No behavior records',
                 no_incidents: 'No incidents recorded',
+
+                // Empty State Translations
+                empty_students_title: 'No Students Yet',
+                empty_students_text: 'Start by adding your first student to begin tracking attendance and grades.',
+                empty_students_action: 'Add First Student',
+                empty_classes_title: 'No Classes Yet',
+                empty_classes_text: 'Create your first class or group to organize students and manage attendance.',
+                empty_classes_action: 'Add First Class',
+                empty_attendance_title: 'No Students to Mark',
+                empty_attendance_text: 'Add students to a class first, then select a date and class filter to mark attendance.',
+                empty_attendance_action: 'Go to Students',
+                empty_tasks_title: 'No Tasks Yet',
+                empty_tasks_text: 'Create your first task to track work items, follow-ups, and deadlines.',
+                empty_tasks_action: 'Create Task',
+                empty_incidents_title: 'No Incidents',
+                empty_incidents_text: 'No incidents have been reported. Everything is running smoothly!',
+                empty_incidents_action: 'Report Incident',
+                empty_teachers_title: 'No Teachers Yet',
+                empty_teachers_text: 'Add your first teacher to assign them to classes and modules.',
+                empty_teachers_action: 'Add First Teacher',
+                empty_years_title: 'No Academic Years',
+                empty_years_text: 'Set up your first academic year to organize student enrollment periods.',
+                empty_years_action: 'Add Academic Year',
+                empty_employees_title: 'No Employees Yet',
+                empty_employees_text: 'Add your first employee to manage staff records and roles.',
+                empty_employees_action: 'Add Employee',
+                empty_dashboard_title: 'Welcome to INFOHAS!',
+                empty_dashboard_text: 'Start by adding students and classes. Your dashboard will come alive with data once you begin.',
+                empty_search_title: 'No Results Found',
+                empty_search_text: 'Try adjusting your search or filter criteria to find what you\'re looking for.',
+                empty_grades_title: 'No Grades Yet',
+                empty_grades_text: 'Grades will appear here once you start recording student assessments.',
+                empty_behavior_title: 'No Behavior Records',
+                empty_behavior_text: 'Behavior records will appear here as you track student conduct.',
                 incidents: 'Incidents',
 
                 // Confirm & Undo
@@ -5547,6 +5626,40 @@
                 no_grades: 'Aucune note enregistrée',
                 no_behavior_records: 'Aucun enregistrement de comportement',
                 no_incidents: 'Aucun incident enregistré',
+
+                // États vides
+                empty_students_title: 'Aucun étudiant',
+                empty_students_text: 'Commencez par ajouter votre premier étudiant pour suivre la présence et les notes.',
+                empty_students_action: 'Ajouter un étudiant',
+                empty_classes_title: 'Aucune classe',
+                empty_classes_text: 'Créez votre première classe ou groupe pour organiser les étudiants et gérer la présence.',
+                empty_classes_action: 'Ajouter une classe',
+                empty_attendance_title: 'Aucun étudiant à marquer',
+                empty_attendance_text: 'Ajoutez d\'abord des étudiants à une classe, puis sélectionnez une date et un filtre de classe.',
+                empty_attendance_action: 'Aller aux étudiants',
+                empty_tasks_title: 'Aucune tâche',
+                empty_tasks_text: 'Créez votre première tâche pour suivre les éléments de travail et les délais.',
+                empty_tasks_action: 'Créer une tâche',
+                empty_incidents_title: 'Aucun incident',
+                empty_incidents_text: 'Aucun incident n\'a été signalé. Tout fonctionne correctement !',
+                empty_incidents_action: 'Signaler un incident',
+                empty_teachers_title: 'Aucun enseignant',
+                empty_teachers_text: 'Ajoutez votre premier enseignant pour l\'assigner aux classes et modules.',
+                empty_teachers_action: 'Ajouter un enseignant',
+                empty_years_title: 'Aucune année académique',
+                empty_years_text: 'Configurez votre première année académique pour organiser les périodes d\'inscription.',
+                empty_years_action: 'Ajouter une année',
+                empty_employees_title: 'Aucun employé',
+                empty_employees_text: 'Ajoutez votre premier employé pour gérer les dossiers du personnel.',
+                empty_employees_action: 'Ajouter un employé',
+                empty_dashboard_title: 'Bienvenue à INFOHAS !',
+                empty_dashboard_text: 'Commencez par ajouter des étudiants et des classes. Votre tableau de bord s\'animera avec des données.',
+                empty_search_title: 'Aucun résultat',
+                empty_search_text: 'Essayez d\'ajuster vos critères de recherche ou de filtrage pour trouver ce que vous cherchez.',
+                empty_grades_title: 'Aucune note',
+                empty_grades_text: 'Les notes apparaîtront ici une fois que vous commencerez à enregistrer les évaluations.',
+                empty_behavior_title: 'Aucun comportement',
+                empty_behavior_text: 'Les enregistrements de comportement apparaîtront ici au fur et à mesure.',
                 incidents: 'Incidents',
 
                 // Confirmation et annulation
@@ -6186,7 +6299,7 @@
                 <div class="empty-state-icon">${icon}</div>
                 <div class="empty-state-title" data-translate="${titleKey}">${translate(titleKey) || titleKey}</div>
                 <div class="empty-state-text" data-translate="${textKey}">${translate(textKey) || textKey}</div>
-                ${actionBtn || ''}
+                ${actionBtn ? `<button class="empty-state-action" onclick="${actionBtn.onclick}">${actionBtn.label}</button>` : ''}
             </div>`;
         }
 
@@ -6280,7 +6393,7 @@
             const container = document.getElementById('recentActivity');
             
             if (recent.length === 0) {
-                container.innerHTML = '<p class="text-center" style="padding: 20px; color: var(--text-light);">' + translate('no_recent_activity') + '</p>';
+                container.innerHTML = renderEmptyState('📊', 'empty_dashboard_title', 'empty_dashboard_text', { onclick: "showPage('students')", label: '➕ ' + (translate('empty_students_action') || 'Add First Student') });
                 return;
             }
             
@@ -7108,7 +7221,7 @@
                     ${studentAttendance.length > 0 ? studentAttendance.slice(0, 30).map(a => {
                         const statusBadge = { present: '🟢', absent: '🔴', late: '🟡', excused: '🔵' };
                         return `<div class="profile-record-item"><span class="profile-record-date">${a.date}</span><span class="profile-record-detail">${statusBadge[a.status] || '⚪'} ${translate(a.status)}</span></div>`;
-                    }).join('') : '<div class="profile-empty">' + (translate('no_attendance_records') || 'No attendance records') + '</div>'}
+                    }).join('') : renderEmptyState('📋', 'no_attendance_records', 'empty_attendance_text')}
                     ${studentAttendance.length > 30 ? `<div style="text-align:center;padding:8px;color:var(--text-light);font-size:0.85rem;">...and ${studentAttendance.length - 30} more records</div>` : ''}
                 </div>
 
@@ -7119,7 +7232,7 @@
                         const pct = g.percentage ? parseFloat(g.percentage) : 0;
                         const color = pct >= 70 ? '#10b981' : pct >= 50 ? '#f59e0b' : '#ef4444';
                         return `<div class="profile-record-item"><span class="profile-record-date">${g.date || '-'}</span><span class="profile-record-detail">${mod ? mod.name : (g.module || '-')} — <strong>${g.grade}</strong> <span style="color:${color};font-weight:600;">(${g.percentage || '-'}%)</span></span></div>`;
-                    }).join('') : '<div class="profile-empty">' + (translate('no_grades') || 'No grades recorded') + '</div>'}
+                    }).join('') : renderEmptyState('📊', 'empty_grades_title', 'empty_grades_text')}
                 </div>
 
                 <!-- Behavior Tab -->
@@ -7128,7 +7241,7 @@
                         const typeIcon = { Positive: '👍', Negative: '👎', Neutral: '➖' };
                         const typeColor = { Positive: '#10b981', Negative: '#ef4444', Neutral: '#6b7280' };
                         return `<div class="profile-record-item"><span class="profile-record-date">${b.date || '-'}</span><span class="profile-record-detail">${typeIcon[b.type] || '•'} <span style="color:${typeColor[b.type] || '#6b7280'};font-weight:600;">${b.type}</span> — ${b.description || '-'} (${b.points > 0 ? '+' : ''}${b.points || 0} pts)</span></div>`;
-                    }).join('') : '<div class="profile-empty">' + (translate('no_behavior_records') || 'No behavior records') + '</div>'}
+                    }).join('') : renderEmptyState('🤝', 'empty_behavior_title', 'empty_behavior_text')}
                 </div>
 
                 <!-- Incidents Tab -->
@@ -7136,7 +7249,7 @@
                     ${studentIncidents.length > 0 ? studentIncidents.map(i => {
                         const sevColor = { Minor: '#f59e0b', Major: '#f97316', Critical: '#ef4444' };
                         return `<div class="profile-record-item"><span class="profile-record-date">${i.date || '-'}</span><span class="profile-record-detail"><span style="color:${sevColor[i.severity] || '#6b7280'};font-weight:600;">${i.severity || '-'}</span> — ${i.description || '-'} <span class="badge badge-secondary" style="font-size:0.72rem;">${i.status || '-'}</span></span></div>`;
-                    }).join('') : '<div class="profile-empty">' + (translate('no_incidents') || 'No incidents recorded') + '</div>'}
+                    }).join('') : renderEmptyState('🛡️', 'empty_incidents_title', 'empty_incidents_text')}
                 </div>
             `;
 
@@ -7714,7 +7827,7 @@
             }).join('');
             
             if (classes.length === 0) {
-                grid.innerHTML = '<div class="card"><div style="text-align: center; padding: 40px; color: var(--text-light);">No classes found. Add your first class!</div></div>';
+                grid.innerHTML = renderEmptyState('🏫', 'empty_classes_title', 'empty_classes_text', { onclick: "showAddClassModal()", label: '➕ ' + (translate('empty_classes_action') || 'Add First Class') });
             }
         }
 
@@ -7923,14 +8036,14 @@
                 const studentClass = classes.find(c => c.id === student.classId);
                 const attendanceRecord = attendance.find(a => a.studentId === student.id && a.date === selectedDate);
                 const status = attendanceRecord ? attendanceRecord.status : null;
-                
+
                 const statusBadges = {
                     present: `<span class="badge badge-success">${translate('present')}</span>`,
                     absent: `<span class="badge badge-danger">${translate('absent')}</span>`,
                     late: `<span class="badge badge-warning">${translate('late')}</span>`,
                     excused: `<span class="badge badge-secondary">${translate('excused')}</span>`
                 };
-                
+
                 return `
                     <tr>
                         <td><strong>${student.fullName}</strong><br><small>${student.studentId}</small></td>
@@ -7938,25 +8051,30 @@
                         <td>${status ? statusBadges[status] : '<span class="badge badge-secondary">Not Marked</span>'}</td>
                         <td>
                             <div class="attendance-actions">
-                                <button class="attendance-btn present ${status === 'present' ? 'active' : ''}" 
+                                <button class="attendance-btn present ${status === 'present' ? 'active' : ''}"
                                         onclick="markAttendance('${student.id}', 'present')" title="${translate('present')}">✅</button>
-                                <button class="attendance-btn absent ${status === 'absent' ? 'active' : ''}" 
+                                <button class="attendance-btn absent ${status === 'absent' ? 'active' : ''}"
                                         onclick="markAttendance('${student.id}', 'absent')" title="${translate('absent')}">❌</button>
-                                <button class="attendance-btn late ${status === 'late' ? 'active' : ''}" 
+                                <button class="attendance-btn late ${status === 'late' ? 'active' : ''}"
                                         onclick="markAttendance('${student.id}', 'late')" title="${translate('late')}">⏰</button>
-                                <button class="attendance-btn excused ${status === 'excused' ? 'active' : ''}" 
+                                <button class="attendance-btn excused ${status === 'excused' ? 'active' : ''}"
                                         onclick="markAttendance('${student.id}', 'excused')" title="${translate('excused')}">🛡️</button>
                             </div>
                         </td>
                         <td>
-                            ${student.guardianPhone ? 
-                                `<button class="btn btn-sm btn-success" onclick="sendAbsenceMessage('${student.id}')" title="Send WhatsApp">📱</button>` : 
+                            ${student.guardianPhone ?
+                                `<button class="btn btn-sm btn-success" onclick="sendAbsenceMessage('${student.id}')" title="Send WhatsApp">📱</button>` :
                                 '-'
                             }
                         </td>
                     </tr>
                 `;
             }).join('');
+
+            // Show empty state if no students to mark attendance
+            if (filteredStudents.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5">${renderEmptyState('📋', 'empty_attendance_title', 'empty_attendance_text', { onclick: "showPage('students')", label: '👤 ' + (translate('empty_attendance_action') || 'Go to Students') })}</td></tr>`;
+            }
         }
 
         function markAttendance(studentId, status) {
@@ -8135,6 +8253,11 @@
                     </div>
                 `;
             }).join('');
+
+            // Show empty state if no students in quick mode
+            if (filteredStudents.length === 0) {
+                listEl.innerHTML = renderEmptyState('📋', 'empty_attendance_title', 'empty_attendance_text', { onclick: "showPage('students')", label: '👤 ' + (translate('empty_attendance_action') || 'Go to Students') });
+            }
 
             // Update stats
             const el = (id) => document.getElementById(id);
@@ -10598,7 +10721,7 @@
             const yearsList = document.getElementById('academicYearsList');
             if (yearsList) {
                 if (academicYears.length === 0) {
-                    yearsList.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-light);">No academic years found. Add your first academic year!</div>';
+                    yearsList.innerHTML = renderEmptyState('📅', 'empty_years_title', 'empty_years_text', { onclick: "showAddAcademicYearModal()", label: '➕ ' + (translate('empty_years_action') || 'Add Academic Year') });
                 } else {
                     yearsList.innerHTML = academicYears.map(year => {
                         const isCurrent = settings.currentAcademicYear === year.id;
@@ -10883,7 +11006,7 @@
             if (!teachersList) return;
             
             if (teachers.length === 0) {
-                teachersList.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-light);">No teachers found. Add your first teacher!</div>';
+                teachersList.innerHTML = renderEmptyState('👨‍🏫', 'empty_teachers_title', 'empty_teachers_text', { onclick: "showAddTeacherModal()", label: '➕ ' + (translate('empty_teachers_action') || 'Add First Teacher') });
                 return;
             }
             
@@ -10954,7 +11077,7 @@
             if (!teachersList) return;
             
             if (filteredTeachers.length === 0) {
-                teachersList.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-light);">No teachers match your search criteria.</div>';
+                teachersList.innerHTML = renderEmptyState('🔍', 'empty_search_title', 'empty_search_text');
                 return;
             }
             
@@ -12195,6 +12318,11 @@
                 `;
             }).join('');
 
+            // Show empty state if no students
+            if (students.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9">${renderEmptyState('🎓', 'empty_students_title', 'empty_students_text', { onclick: "showAddStudentModal()", label: '➕ ' + (translate('empty_students_action') || 'Add First Student') })}</td></tr>`;
+            }
+
             // Update batch select column visibility
             updateBatchSelectVisibility();
         }
@@ -12383,7 +12511,7 @@
             // Render tasks
             const container = document.getElementById('tasksListContainer');
             if (filteredTasks.length === 0) {
-                container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-light);">' + (translate('no_tasks_found') || 'No tasks found') + '</div>';
+                container.innerHTML = renderEmptyState('📝', 'empty_tasks_title', 'empty_tasks_text', { onclick: "showAddTaskModal()", label: '➕ ' + (translate('empty_tasks_action') || 'Create Task') });
                 return;
             }
 
@@ -12879,7 +13007,7 @@
 
             const container = document.getElementById('incidentsListContainer');
             if (filteredIncidents.length === 0) {
-                container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-light);">' + (translate('no_incidents_found') || 'No incidents found') + '</div>';
+                container.innerHTML = renderEmptyState('🛡️', 'empty_incidents_title', 'empty_incidents_text', { onclick: "showAddIncidentModal()", label: '➕ ' + (translate('empty_incidents_action') || 'Report Incident') });
                 return;
             }
 
@@ -13301,7 +13429,7 @@
             if (!employeesList) return;
 
             if (employees.length === 0) {
-                employeesList.innerHTML = '<p style="text-align:center;padding:20px;color:var(--text-light);">No employees found. Add your first employee!</p>';
+                employeesList.innerHTML = renderEmptyState('👔', 'empty_employees_title', 'empty_employees_text', { onclick: "showAddEmployeeModal()", label: '➕ ' + (translate('empty_employees_action') || 'Add Employee') });
                 return;
             }
 
@@ -13336,7 +13464,7 @@
             if (!employeesList) return;
             
             if (filtered.length === 0) {
-                employeesList.innerHTML = '<p style="text-align:center;padding:20px;color:var(--text-light);">No employees match your criteria.</p>';
+                employeesList.innerHTML = renderEmptyState('🔍', 'empty_search_title', 'empty_search_text');
                 return;
             }
 
