@@ -2777,6 +2777,106 @@
         .theme-pink { --primary: #ec4899; --primary-dark: #db2777; --purple-bg: #f472b6; --purple-light: #f9a8d4; --purple-dark: #db2777; }
         .theme-indigo { --primary: #6366f1; --primary-dark: #4338ca; --purple-bg: #818cf8; --purple-light: #a5b4fc; --purple-dark: #4338ca; }
 
+        /* ===== Student 360 Profile Modal ===== */
+        .profile-modal .modal-content { max-width: 800px; }
+        .profile-header {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border, #e5e7eb);
+            margin-bottom: 16px;
+        }
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--bg, #f3f4f6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+        .profile-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+        .profile-name { font-size: 1.3rem; font-weight: 700; color: var(--text-dark, #1f2937); margin: 0; }
+        .profile-subtitle { color: var(--text-light, #6b7280); font-size: 0.88rem; margin-top: 2px; }
+        .profile-badges { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+        .profile-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .profile-info-item {
+            padding: 10px;
+            border-radius: 8px;
+            background: var(--bg, #f3f4f6);
+        }
+        .profile-info-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-light, #6b7280); margin-bottom: 2px; }
+        .profile-info-value { font-size: 0.95rem; font-weight: 600; color: var(--text-dark, #1f2937); }
+        .profile-tabs { display: flex; gap: 2px; margin-bottom: 16px; border-bottom: 2px solid var(--border, #e5e7eb); }
+        .profile-tab {
+            padding: 8px 16px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text-light, #6b7280);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+            background: none;
+            border-top: none;
+            border-left: none;
+            border-right: none;
+        }
+        .profile-tab:hover { color: var(--primary); }
+        .profile-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+        .profile-tab-content { display: none; }
+        .profile-tab-content.active { display: block; }
+        .profile-stat-row { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+        .profile-stat-card {
+            flex: 1;
+            min-width: 100px;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .profile-stat-card .stat-num { font-size: 1.4rem; font-weight: 700; }
+        .profile-stat-card .stat-lbl { font-size: 0.75rem; font-weight: 600; }
+        .profile-stat-card.psc-present { background: #d1fae5; color: #065f46; }
+        .profile-stat-card.psc-absent { background: #fee2e2; color: #991b1b; }
+        .profile-stat-card.psc-late { background: #fef3c7; color: #92400e; }
+        .profile-stat-card.psc-excused { background: #e0e7ff; color: #3730a3; }
+        .profile-stat-card.psc-rate { background: #dbeafe; color: #1e40af; }
+        .profile-record-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            background: var(--bg, #f3f4f6);
+        }
+        .profile-record-date { font-size: 0.82rem; color: var(--text-light, #6b7280); min-width: 90px; }
+        .profile-record-detail { font-size: 0.88rem; color: var(--text-dark, #1f2937); flex: 1; }
+        .profile-empty { text-align: center; padding: 24px; color: var(--text-light, #6b7280); font-size: 0.92rem; }
+        .dark-mode .profile-name { color: #e2e8f0; }
+        .dark-mode .profile-info-value { color: #e2e8f0; }
+        .dark-mode .profile-info-item { background: #334155; }
+        .dark-mode .profile-record-item { background: #334155; }
+        .dark-mode .profile-record-detail { color: #e2e8f0; }
+        .dark-mode .profile-stat-card.psc-present { background: #064e3b; color: #6ee7b7; }
+        .dark-mode .profile-stat-card.psc-absent { background: #7f1d1d; color: #fca5a5; }
+        .dark-mode .profile-stat-card.psc-late { background: #78350f; color: #fcd34d; }
+        .dark-mode .profile-stat-card.psc-excused { background: #312e81; color: #a5b4fc; }
+        .dark-mode .profile-stat-card.psc-rate { background: #1e3a5f; color: #93c5fd; }
+        @media (max-width: 600px) {
+            .profile-header { flex-direction: column; text-align: center; }
+            .profile-info-grid { grid-template-columns: 1fr 1fr; }
+        }
+
         /* ===== Attendance Quick Mode ===== */
         .attendance-stats-bar {
             display: flex;
@@ -4259,6 +4359,19 @@
 
     <div id="modalsContainer"></div>
 
+    <!-- Student 360 Profile Modal -->
+    <div id="studentProfileModal" class="modal profile-modal">
+        <div class="modal-content" style="max-width:800px;">
+            <div class="modal-header">
+                <h2 class="modal-title">👤 <span data-translate="student_profile">Student Profile</span></h2>
+                <button class="close-btn" onclick="closeModal('studentProfileModal')">&times;</button>
+            </div>
+            <div id="studentProfileContent">
+                <!-- Dynamically loaded -->
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Notification -->
     <div id="toast" class="toast"></div>
 
@@ -4952,7 +5065,17 @@
                 // Attendance Quick Mode
                 quick_mode: 'Quick Mode',
                 mark_all_absent: 'Mark All Absent',
-                not_marked: 'Not Marked'
+                not_marked: 'Not Marked',
+
+                // Student Profile
+                student_profile: 'Student Profile',
+                rate: 'Rate',
+                report: 'Report',
+                no_attendance_records: 'No attendance records',
+                no_grades: 'No grades recorded',
+                no_behavior_records: 'No behavior records',
+                no_incidents: 'No incidents recorded',
+                incidents: 'Incidents'
             },
             fr: {
                 // Navigation
@@ -5336,7 +5459,17 @@
                 // Mode rapide de présence
                 quick_mode: 'Mode rapide',
                 mark_all_absent: 'Marquer tous absents',
-                not_marked: 'Non marqué'
+                not_marked: 'Non marqué',
+
+                // Profil étudiant
+                student_profile: 'Profil étudiant',
+                rate: 'Taux',
+                report: 'Rapport',
+                no_attendance_records: 'Aucun enregistrement de présence',
+                no_grades: 'Aucune note enregistrée',
+                no_behavior_records: 'Aucun enregistrement de comportement',
+                no_incidents: 'Aucun incident enregistré',
+                incidents: 'Incidents'
             }
         };
 
@@ -6563,11 +6696,11 @@
                     <tr>
                         <td>
                             ${student.photo ? 
-                                `<img src="${student.photo}" class="photo-preview" style="width: 40px; height: 40px;">` : 
-                                '<div style="width: 40px; height: 40px; background: var(--secondary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px;">👤</div>'
+                                `<img src="${student.photo}" class="photo-preview" style="width: 40px; height: 40px; cursor:pointer;" onclick="showStudentProfile('${student.id}')">` : 
+                                '<div style="width: 40px; height: 40px; background: var(--secondary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor:pointer;" onclick="showStudentProfile(\'${student.id}\')">👤</div>'
                             }
                         </td>
-                        <td><strong>${student.fullName}</strong></td>
+                        <td><strong><a href="javascript:void(0)" onclick="showStudentProfile('${student.id}')" style="color:var(--primary);text-decoration:none;cursor:pointer;">${student.fullName}</a></strong></td>
                         <td>${student.studentId}</td>
                         <td>${studentClass ? studentClass.name : '-'}</td>
                         <td>${student.guardianName || '-'}</td>
@@ -6582,6 +6715,7 @@
                         </td>
                         <td>
                             <div style="display: flex; gap: 5px;">
+                                <button class="btn btn-sm btn-secondary" onclick="showStudentProfile('${student.id}')" title="View Profile">👁️</button>
                                 <button class="btn btn-sm btn-secondary" onclick="editStudent('${student.id}')" title="Edit">✏️</button>
                                 <button class="btn btn-sm btn-danger" onclick="deleteStudent('${student.id}')" title="Delete">🗑️</button>
                                 <button class="btn btn-sm btn-primary" onclick="generateStudentReportPDF('${student.id}')" title="Generate Report">📄</button>
@@ -6700,6 +6834,156 @@
                 showToast('Student deleted successfully');
                 loadStudents();
             }
+        }
+
+        // ===== Student 360° Profile =====
+        function showStudentProfile(studentId) {
+            const students = loadFromStorage(STORAGE_KEYS.STUDENTS) || [];
+            const student = students.find(s => s.id === studentId);
+            if (!student) { showToast('Student not found', 'error'); return; }
+
+            const classes = loadFromStorage(STORAGE_KEYS.CLASSES) || [];
+            const attendance = loadFromStorage(STORAGE_KEYS.ATTENDANCE) || [];
+            const grades = loadFromStorage(STORAGE_KEYS.GRADES) || [];
+            const behaviors = loadFromStorage(STORAGE_KEYS.BEHAVIOR) || [];
+            const incidents = loadFromStorage(STORAGE_KEYS.INCIDENTS) || [];
+            const modules = loadFromStorage(STORAGE_KEYS.MODULES) || [];
+
+            const studentClass = classes.find(c => c.id === student.classId);
+            const studentAttendance = attendance.filter(a => a.studentId === studentId).sort((a,b) => b.date.localeCompare(a.date));
+            const studentGrades = grades.filter(g => g.studentId === studentId).sort((a,b) => (b.date || '').localeCompare(a.date || ''));
+            const studentBehaviors = behaviors.filter(b => b.studentId === studentId).sort((a,b) => (b.date || '').localeCompare(a.date || ''));
+            const studentIncidents = incidents.filter(i => i.studentId === studentId).sort((a,b) => (b.date || '').localeCompare(a.date || ''));
+
+            // Attendance stats
+            const totalDays = studentAttendance.length;
+            const presentDays = studentAttendance.filter(a => a.status === 'present').length;
+            const absentDays = studentAttendance.filter(a => a.status === 'absent').length;
+            const lateDays = studentAttendance.filter(a => a.status === 'late').length;
+            const excusedDays = studentAttendance.filter(a => a.status === 'excused').length;
+            const attendanceRate = totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 0;
+
+            // Grade average
+            const validGrades = studentGrades.filter(g => g.percentage && !isNaN(g.percentage));
+            const avgGrade = validGrades.length > 0 ? Math.round(validGrades.reduce((s,g) => s + parseFloat(g.percentage), 0) / validGrades.length) : 0;
+
+            // Behavior points
+            const totalBehaviorPoints = studentBehaviors.reduce((s,b) => s + (parseInt(b.points) || 0), 0);
+
+            // Status badge
+            const statusColors = { active: '#10b981', abandoned: '#f59e0b', terminated: '#ef4444', graduated: '#6366f1' };
+            const statusColor = statusColors[student.status] || '#6b7280';
+
+            const content = document.getElementById('studentProfileContent');
+            if (!content) return;
+
+            content.innerHTML = `
+                <!-- Header -->
+                <div class="profile-header">
+                    <div class="profile-avatar">
+                        ${student.photo ? `<img src="${student.photo}" alt="${student.fullName}">` : '👤'}
+                    </div>
+                    <div style="flex:1;min-width:0;">
+                        <h3 class="profile-name">${student.fullName}</h3>
+                        <div class="profile-subtitle">${student.studentId} • ${studentClass ? studentClass.name : '-'}</div>
+                        <div class="profile-badges">
+                            <span class="badge" style="background:${statusColor};color:white;">${student.status || 'active'}</span>
+                            <span class="badge badge-secondary">${student.academicYear || '-'}</span>
+                            ${avgGrade > 0 ? `<span class="badge" style="background:#3b82f6;color:white;">Avg: ${avgGrade}%</span>` : ''}
+                            ${totalBehaviorPoints !== 0 ? `<span class="badge" style="background:${totalBehaviorPoints > 0 ? '#10b981' : '#ef4444'};color:white;">${totalBehaviorPoints > 0 ? '+' : ''}${totalBehaviorPoints} pts</span>` : ''}
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:6px;flex-shrink:0;">
+                        <button class="btn btn-sm btn-secondary" onclick="editStudent('${student.id}');closeModal('studentProfileModal')">✏️ <span data-translate="edit">Edit</span></button>
+                        <button class="btn btn-sm btn-primary" onclick="generateStudentReportPDF('${student.id}')">📄 <span data-translate="report">Report</span></button>
+                    </div>
+                </div>
+
+                <!-- Info Grid -->
+                <div class="profile-info-grid">
+                    <div class="profile-info-item">
+                        <div class="profile-info-label" data-translate="guardian">Guardian</div>
+                        <div class="profile-info-value">${student.guardianName || '-'}</div>
+                    </div>
+                    <div class="profile-info-item">
+                        <div class="profile-info-label" data-translate="phone">Phone</div>
+                        <div class="profile-info-value">${student.guardianPhone || '-'}</div>
+                    </div>
+                    <div class="profile-info-item">
+                        <div class="profile-info-label" data-translate="email">Email</div>
+                        <div class="profile-info-value" style="word-break:break-all;">${student.email || '-'}</div>
+                    </div>
+                    <div class="profile-info-item">
+                        <div class="profile-info-label" data-translate="address">Address</div>
+                        <div class="profile-info-value">${student.address || '-'}</div>
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <div class="profile-tabs">
+                    <button class="profile-tab active" onclick="switchProfileTab('attendance', this)" data-translate="attendance">Attendance</button>
+                    <button class="profile-tab" onclick="switchProfileTab('grades', this)" data-translate="grades">Grades</button>
+                    <button class="profile-tab" onclick="switchProfileTab('behavior', this)" data-translate="behavior">Behavior</button>
+                    <button class="profile-tab" onclick="switchProfileTab('incidents', this)" data-translate="incidents">Incidents</button>
+                </div>
+
+                <!-- Attendance Tab -->
+                <div class="profile-tab-content active" id="profileTabAttendance">
+                    <div class="profile-stat-row">
+                        <div class="profile-stat-card psc-present"><div class="stat-num">${presentDays}</div><div class="stat-lbl">${translate('present')}</div></div>
+                        <div class="profile-stat-card psc-absent"><div class="stat-num">${absentDays}</div><div class="stat-lbl">${translate('absent')}</div></div>
+                        <div class="profile-stat-card psc-late"><div class="stat-num">${lateDays}</div><div class="stat-lbl">${translate('late')}</div></div>
+                        <div class="profile-stat-card psc-excused"><div class="stat-num">${excusedDays}</div><div class="stat-lbl">${translate('excused')}</div></div>
+                        <div class="profile-stat-card psc-rate"><div class="stat-num">${attendanceRate}%</div><div class="stat-lbl">${translate('rate') || 'Rate'}</div></div>
+                    </div>
+                    ${studentAttendance.length > 0 ? studentAttendance.slice(0, 30).map(a => {
+                        const statusBadge = { present: '🟢', absent: '🔴', late: '🟡', excused: '🔵' };
+                        return `<div class="profile-record-item"><span class="profile-record-date">${a.date}</span><span class="profile-record-detail">${statusBadge[a.status] || '⚪'} ${translate(a.status)}</span></div>`;
+                    }).join('') : '<div class="profile-empty">' + (translate('no_attendance_records') || 'No attendance records') + '</div>'}
+                    ${studentAttendance.length > 30 ? `<div style="text-align:center;padding:8px;color:var(--text-light);font-size:0.85rem;">...and ${studentAttendance.length - 30} more records</div>` : ''}
+                </div>
+
+                <!-- Grades Tab -->
+                <div class="profile-tab-content" id="profileTabGrades">
+                    ${studentGrades.length > 0 ? studentGrades.map(g => {
+                        const mod = modules.find(m => m.id === g.moduleId);
+                        const pct = g.percentage ? parseFloat(g.percentage) : 0;
+                        const color = pct >= 70 ? '#10b981' : pct >= 50 ? '#f59e0b' : '#ef4444';
+                        return `<div class="profile-record-item"><span class="profile-record-date">${g.date || '-'}</span><span class="profile-record-detail">${mod ? mod.name : (g.module || '-')} — <strong>${g.grade}</strong> <span style="color:${color};font-weight:600;">(${g.percentage || '-'}%)</span></span></div>`;
+                    }).join('') : '<div class="profile-empty">' + (translate('no_grades') || 'No grades recorded') + '</div>'}
+                </div>
+
+                <!-- Behavior Tab -->
+                <div class="profile-tab-content" id="profileTabBehavior">
+                    ${studentBehaviors.length > 0 ? studentBehaviors.map(b => {
+                        const typeIcon = { Positive: '👍', Negative: '👎', Neutral: '➖' };
+                        const typeColor = { Positive: '#10b981', Negative: '#ef4444', Neutral: '#6b7280' };
+                        return `<div class="profile-record-item"><span class="profile-record-date">${b.date || '-'}</span><span class="profile-record-detail">${typeIcon[b.type] || '•'} <span style="color:${typeColor[b.type] || '#6b7280'};font-weight:600;">${b.type}</span> — ${b.description || '-'} (${b.points > 0 ? '+' : ''}${b.points || 0} pts)</span></div>`;
+                    }).join('') : '<div class="profile-empty">' + (translate('no_behavior_records') || 'No behavior records') + '</div>'}
+                </div>
+
+                <!-- Incidents Tab -->
+                <div class="profile-tab-content" id="profileTabIncidents">
+                    ${studentIncidents.length > 0 ? studentIncidents.map(i => {
+                        const sevColor = { Minor: '#f59e0b', Major: '#f97316', Critical: '#ef4444' };
+                        return `<div class="profile-record-item"><span class="profile-record-date">${i.date || '-'}</span><span class="profile-record-detail"><span style="color:${sevColor[i.severity] || '#6b7280'};font-weight:600;">${i.severity || '-'}</span> — ${i.description || '-'} <span class="badge badge-secondary" style="font-size:0.72rem;">${i.status || '-'}</span></span></div>`;
+                    }).join('') : '<div class="profile-empty">' + (translate('no_incidents') || 'No incidents recorded') + '</div>'}
+                </div>
+            `;
+
+            // Show the modal
+            document.getElementById('studentProfileModal').classList.remove('hidden');
+        }
+
+        function switchProfileTab(tabName, btn) {
+            // Update tab buttons
+            document.querySelectorAll('.profile-tab').forEach(t => t.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            // Update tab contents
+            document.querySelectorAll('.profile-tab-content').forEach(c => c.classList.remove('active'));
+            const tabMap = { attendance: 'profileTabAttendance', grades: 'profileTabGrades', behavior: 'profileTabBehavior', incidents: 'profileTabIncidents' };
+            const tabEl = document.getElementById(tabMap[tabName]);
+            if (tabEl) tabEl.classList.add('active');
         }
 
         function previewPhoto(input, previewId) {
