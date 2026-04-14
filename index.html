@@ -2838,6 +2838,27 @@
         .dark-mode .empty-state-text { color: #94a3b8; }
         .dark-mode .empty-state-icon { opacity: 0.7; }
 
+        /* Dashboard Customizer */
+        .dashboard-widget { transition: all 0.3s ease; }
+        .dashboard-widget.widget-hidden { display: none !important; }
+        .widget-order-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: var(--secondary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            cursor: grab;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+        .widget-order-item:hover { background: rgba(99,102,241,0.08); border-color: var(--primary); }
+        .widget-order-item.dragging { opacity: 0.5; background: rgba(99,102,241,0.15); }
+        .widget-order-item .drag-handle { cursor: grab; font-size: 1.1rem; color: var(--text-light); }
+        .widget-order-item .widget-label { flex: 1; font-weight: 500; color: var(--text); }
+        .widget-order-item .widget-toggle { accent-color: var(--primary); width: 18px; height: 18px; cursor: pointer; }
+
         /* Custom Confirm Dialog */
         .confirm-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px);
@@ -3363,67 +3384,77 @@
 
             <!-- Dashboard Page -->
             <div id="dashboardPage" class="page">
-                <div class="stats-grid">
-                    <div class="stat-card" style="background: linear-gradient(135deg, var(--primary), var(--primary-dark));">
-                        <div class="stat-info">
-                            <h3 id="totalStudents">0</h3>
-                            <p data-translate="total_students">Total Students</p>
+                <div id="dashboardWidgets">
+                <!-- Stats Grid Widget -->
+                <div class="dashboard-widget" data-widget="stats" id="widgetStats">
+                    <div class="stats-grid">
+                        <div class="stat-card" style="background: linear-gradient(135deg, var(--primary), var(--primary-dark));">
+                            <div class="stat-info">
+                                <h3 id="totalStudents">0</h3>
+                                <p data-translate="total_students">Total Students</p>
+                            </div>
+                            <div class="stat-icon">👥</div>
                         </div>
-                        <div class="stat-icon">👥</div>
-                    </div>
-                    <div class="stat-card" style="background: linear-gradient(135deg, var(--success), #059669);">
-                        <div class="stat-info">
-                            <h3 id="totalClasses">0</h3>
-                            <p data-translate="total_classes">Total Classes</p>
+                        <div class="stat-card" style="background: linear-gradient(135deg, var(--success), #059669);">
+                            <div class="stat-info">
+                                <h3 id="totalClasses">0</h3>
+                                <p data-translate="total_classes">Total Classes</p>
+                            </div>
+                            <div class="stat-icon">🏫</div>
                         </div>
-                        <div class="stat-icon">🏫</div>
-                    </div>
-                    <div class="stat-card" style="background: linear-gradient(135deg, var(--warning), #d97706);">
-                        <div class="stat-info">
-                            <h3 id="todayAttendance">0</h3>
-                            <p data-translate="today_attendance">Today's Attendance</p>
+                        <div class="stat-card" style="background: linear-gradient(135deg, var(--warning), #d97706);">
+                            <div class="stat-info">
+                                <h3 id="todayAttendance">0</h3>
+                                <p data-translate="today_attendance">Today's Attendance</p>
+                            </div>
+                            <div class="stat-icon">📅</div>
                         </div>
-                        <div class="stat-icon">📅</div>
-                    </div>
-                    <div class="stat-card" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
-                        <div class="stat-info">
-                            <h3 id="presentToday">0</h3>
-                            <p data-translate="present_today">Present Today</p>
+                        <div class="stat-card" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+                            <div class="stat-info">
+                                <h3 id="presentToday">0</h3>
+                                <p data-translate="present_today">Present Today</p>
+                            </div>
+                            <div class="stat-icon">✅</div>
                         </div>
-                        <div class="stat-icon">✅</div>
                     </div>
                 </div>
 
-                <!-- Quick Actions -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">🚀 <span data-translate="quick_actions">Quick Actions</span></h2>
-                    </div>
-                    <div class="action-buttons">
-                        <button class="btn btn-primary" onclick="showAddStudentModal()">
-                            ➕ <span data-translate="add_student">Add Student</span>
-                        </button>
-                        <button class="btn btn-success" onclick="showPage('attendance')">
-                            📝 <span data-translate="mark_attendance">Mark Attendance</span>
-                        </button>
-                        <button class="btn btn-warning" onclick="generateTodayReport()">
-                            📊 <span data-translate="today_report">Today's Report</span>
-                        </button>
-                        <button class="btn btn-secondary" onclick="showPage('calendar')">
-                            🗓️ <span data-translate="view_calendar">View Calendar</span>
-                        </button>
+                <!-- Quick Actions Widget -->
+                <div class="dashboard-widget" data-widget="quickActions" id="widgetQuickActions">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">🚀 <span data-translate="quick_actions">Quick Actions</span></h2>
+                            <button class="btn btn-secondary btn-sm" onclick="openDashboardCustomizer()" title="Customize Dashboard">⚙️</button>
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn btn-primary" onclick="showAddStudentModal()">
+                                ➕ <span data-translate="add_student">Add Student</span>
+                            </button>
+                            <button class="btn btn-success" onclick="showPage('attendance')">
+                                📝 <span data-translate="mark_attendance">Mark Attendance</span>
+                            </button>
+                            <button class="btn btn-warning" onclick="generateTodayReport()">
+                                📊 <span data-translate="today_report">Today's Report</span>
+                            </button>
+                            <button class="btn btn-secondary" onclick="showPage('calendar')">
+                                🗓️ <span data-translate="view_calendar">View Calendar</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Recent Activity -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">📋 <span data-translate="recent_activity">Recent Activity</span></h2>
-                        <button class="btn btn-secondary btn-sm" onclick="refreshDashboard()">🔄 <span data-translate="refresh">Refresh</span></button>
+                <!-- Recent Activity Widget -->
+                <div class="dashboard-widget" data-widget="recentActivity" id="widgetRecentActivity">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">📋 <span data-translate="recent_activity">Recent Activity</span></h2>
+                            <button class="btn btn-secondary btn-sm" onclick="refreshDashboard()">🔄 <span data-translate="refresh">Refresh</span></button>
+                        </div>
+                        <div id="recentActivity">
+                            <p class="text-center" style="padding: 20px; color: var(--text-light);" data-translate="no_recent_activity">No recent activity</p>
+                        </div>
                     </div>
-                    <div id="recentActivity">
-                        <p class="text-center" style="padding: 20px; color: var(--text-light);" data-translate="no_recent_activity">No recent activity</p>
-                    </div>
+                </div>
                 </div>
             </div>
 
@@ -4455,6 +4486,26 @@
 
     <div id="modalsContainer"></div>
 
+    <!-- Dashboard Customizer Modal -->
+    <div id="dashboardCustomizerModal" class="modal">
+        <div class="modal-content" style="max-width:500px;">
+            <div class="modal-header">
+                <h2 class="modal-title">⚙️ <span data-translate="customize_dashboard">Customize Dashboard</span></h2>
+                <button class="close-btn" onclick="closeModal('dashboardCustomizerModal')">&times;</button>
+            </div>
+            <div id="dashboardCustomizerContent">
+                <p style="color:var(--text-light);margin-bottom:16px;" data-translate="customize_dashboard_text">Drag to reorder widgets. Toggle visibility with checkboxes.</p>
+                <div id="widgetOrderList" style="display:flex;flex-direction:column;gap:8px;">
+                    <!-- Dynamically filled -->
+                </div>
+                <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px;">
+                    <button class="btn btn-secondary" onclick="resetDashboardLayout()"><span data-translate="reset">Reset</span></button>
+                    <button class="btn btn-primary" onclick="saveDashboardLayout();closeModal('dashboardCustomizerModal')"><span data-translate="save">Save</span></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Student 360 Profile Modal -->
     <div id="studentProfileModal" class="modal profile-modal">
         <div class="modal-content" style="max-width:800px;">
@@ -5224,6 +5275,15 @@
                 empty_grades_text: 'Grades will appear here once you start recording student assessments.',
                 empty_behavior_title: 'No Behavior Records',
                 empty_behavior_text: 'Behavior records will appear here as you track student conduct.',
+
+                // Dashboard Customization
+                customize_dashboard: 'Customize Dashboard',
+                customize_dashboard_text: 'Drag to reorder widgets. Toggle visibility with checkboxes.',
+                stats: 'Stats Overview',
+                quickActions: 'Quick Actions',
+                recentActivity: 'Recent Activity',
+                settings_saved: 'Dashboard layout saved!',
+                settings_reset: 'Dashboard reset to default!',
                 incidents: 'Incidents',
 
                 // Confirm & Undo
@@ -5660,6 +5720,15 @@
                 empty_grades_text: 'Les notes apparaîtront ici une fois que vous commencerez à enregistrer les évaluations.',
                 empty_behavior_title: 'Aucun comportement',
                 empty_behavior_text: 'Les enregistrements de comportement apparaîtront ici au fur et à mesure.',
+
+                // Personnalisation du tableau de bord
+                customize_dashboard: 'Personnaliser le tableau de bord',
+                customize_dashboard_text: 'Glissez pour réorganiser les widgets. Activez/désactivez avec les cases à cocher.',
+                stats: 'Statistiques',
+                quickActions: 'Actions rapides',
+                recentActivity: 'Activité récente',
+                settings_saved: 'Mise en page du tableau de bord enregistrée !',
+                settings_reset: 'Tableau de bord réinitialisé !',
                 incidents: 'Incidents',
 
                 // Confirmation et annulation
@@ -6303,6 +6372,116 @@
             </div>`;
         }
 
+        // ===== Dashboard Customization =====
+        const DASHBOARD_LAYOUT_KEY = 'dashboardLayout';
+        const defaultDashboardLayout = [
+            { id: 'stats', label: 'Stats Overview', icon: '📊', visible: true },
+            { id: 'quickActions', label: 'Quick Actions', icon: '🚀', visible: true },
+            { id: 'recentActivity', label: 'Recent Activity', icon: '📋', visible: true }
+        ];
+
+        function getDashboardLayout() {
+            const saved = localStorage.getItem(DASHBOARD_LAYOUT_KEY);
+            if (saved) {
+                try { return JSON.parse(saved); } catch(e) {}
+            }
+            return [...defaultDashboardLayout];
+        }
+
+        function applyDashboardLayout() {
+            const layout = getDashboardLayout();
+            const container = document.getElementById('dashboardWidgets');
+            if (!container) return;
+
+            // Reorder widgets according to layout
+            layout.forEach(item => {
+                const widget = document.querySelector(`.dashboard-widget[data-widget="${item.id}"]`);
+                if (widget) {
+                    container.appendChild(widget);
+                    if (item.visible) {
+                        widget.classList.remove('widget-hidden');
+                    } else {
+                        widget.classList.add('widget-hidden');
+                    }
+                }
+            });
+        }
+
+        function openDashboardCustomizer() {
+            const layout = getDashboardLayout();
+            const listEl = document.getElementById('widgetOrderList');
+            if (!listEl) return;
+
+            listEl.innerHTML = layout.map((item, idx) => `
+                <div class="widget-order-item" draggable="true" data-widget-id="${item.id}" data-index="${idx}">
+                    <span class="drag-handle">⠿</span>
+                    <span style="font-size:1.2rem;">${item.icon}</span>
+                    <span class="widget-label">${translate(item.id) || item.label}</span>
+                    <input type="checkbox" class="widget-toggle" ${item.visible ? 'checked' : ''} data-widget-id="${item.id}">
+                </div>
+            `).join('');
+
+            // Setup drag and drop
+            let dragItem = null;
+            listEl.querySelectorAll('.widget-order-item').forEach(el => {
+                el.addEventListener('dragstart', (e) => {
+                    dragItem = el;
+                    el.classList.add('dragging');
+                    e.dataTransfer.effectAllowed = 'move';
+                });
+                el.addEventListener('dragend', () => {
+                    el.classList.remove('dragging');
+                    dragItem = null;
+                });
+                el.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                    if (dragItem && dragItem !== el) {
+                        const list = [...listEl.querySelectorAll('.widget-order-item')];
+                        const dragIdx = list.indexOf(dragItem);
+                        const dropIdx = list.indexOf(el);
+                        if (dragIdx < dropIdx) {
+                            listEl.insertBefore(dragItem, el.nextSibling);
+                        } else {
+                            listEl.insertBefore(dragItem, el);
+                        }
+                    }
+                });
+            });
+
+            showModal('dashboardCustomizerModal');
+        }
+
+        function saveDashboardLayout() {
+            const listEl = document.getElementById('widgetOrderList');
+            if (!listEl) return;
+
+            const items = listEl.querySelectorAll('.widget-order-item');
+            const layout = [];
+            items.forEach(el => {
+                const id = el.dataset.widgetId;
+                const toggle = el.querySelector('.widget-toggle');
+                const defaultItem = defaultDashboardLayout.find(d => d.id === id);
+                layout.push({
+                    id,
+                    label: defaultItem?.label || id,
+                    icon: defaultItem?.icon || '📦',
+                    visible: toggle ? toggle.checked : true
+                });
+            });
+
+            localStorage.setItem(DASHBOARD_LAYOUT_KEY, JSON.stringify(layout));
+            applyDashboardLayout();
+            showToast(translate('settings_saved') || 'Dashboard layout saved!');
+        }
+
+        function resetDashboardLayout() {
+            localStorage.removeItem(DASHBOARD_LAYOUT_KEY);
+            applyDashboardLayout();
+            closeModal('dashboardCustomizerModal');
+            showToast(translate('settings_reset') || 'Dashboard reset to default!');
+        }
+
         // Page Management
         function showPage(pageName) {
             // Hide all pages
@@ -6368,6 +6547,9 @@
             const classes = loadFromStorage(STORAGE_KEYS.CLASSES) || [];
             const attendance = loadFromStorage(STORAGE_KEYS.ATTENDANCE) || [];
             
+            // Apply saved dashboard layout
+            applyDashboardLayout();
+
             // Update stats
             document.getElementById('totalStudents').textContent = students.length;
             document.getElementById('totalClasses').textContent = classes.length;
