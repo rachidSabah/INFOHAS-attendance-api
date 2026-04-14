@@ -3612,6 +3612,18 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Attendance Chart Widget -->
+                <div class="dashboard-widget" data-widget="attendanceChart" id="widgetAttendanceChart">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">📊 <span data-translate="weekly_attendance_chart">Weekly Attendance</span></h2>
+                        </div>
+                        <div style="padding:10px;height:260px;">
+                            <canvas id="dashboardAttendanceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
                 </div>
             </div>
 
@@ -5475,6 +5487,8 @@
                 recentActivity: 'Recent Activity',
                 settings_saved: 'Dashboard layout saved!',
                 settings_reset: 'Dashboard reset to default!',
+                attendanceChart: 'Weekly Chart',
+                weekly_attendance_chart: 'Weekly Attendance',
 
                 // Attendance Trends/Streaks
                 trends: 'Trends',
@@ -5966,6 +5980,8 @@
                 recentActivity: 'Activité récente',
                 settings_saved: 'Mise en page du tableau de bord enregistrée !',
                 settings_reset: 'Tableau de bord réinitialisé !',
+                attendanceChart: 'Graphique hebdomadaire',
+                weekly_attendance_chart: 'Présence hebdomadaire',
 
                 // Tendances de présence
                 trends: 'Tendances',
@@ -6661,7 +6677,8 @@
         const defaultDashboardLayout = [
             { id: 'stats', label: 'Stats Overview', icon: '📊', visible: true },
             { id: 'quickActions', label: 'Quick Actions', icon: '🚀', visible: true },
-            { id: 'recentActivity', label: 'Recent Activity', icon: '📋', visible: true }
+            { id: 'recentActivity', label: 'Recent Activity', icon: '📋', visible: true },
+            { id: 'attendanceChart', label: 'Weekly Chart', icon: '📈', visible: true }
         ];
 
         function getDashboardLayout() {
@@ -7227,6 +7244,9 @@
             
             // Load recent activity
             loadRecentActivity();
+
+            // Load dashboard chart
+            renderDashboardChart();
         }
 
         function loadRecentActivity() {
@@ -7268,6 +7288,97 @@
         function refreshDashboard() {
             loadDashboard();
             showToast(translate('dashboard_refreshed') || 'Dashboard refreshed');
+        }
+
+        // ===== Dashboard Attendance Chart =====
+        let dashboardChartInstance = null;
+
+        function renderDashboardChart() {
+            const canvas = document.getElementById('dashboardAttendanceChart');
+            if (!canvas) return;
+
+            const attendance = loadFromStorage(STORAGE_KEYS.ATTENDANCE) || [];
+            const today = new Date();
+            const labels = [];
+            const presentData = [];
+            const absentData = [];
+            const lateData = [];
+
+            // Last 7 days
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date(today);
+                d.setDate(today.getDate() - i);
+                const dateStr = d.toISOString().split('T')[0];
+                const dayName = d.toLocaleDateString(currentLang === 'fr' ? 'fr-FR' : 'en-US', { weekday: 'short' });
+                labels.push(dayName);
+
+                const dayRecs = attendance.filter(a => a.date === dateStr);
+                presentData.push(dayRecs.filter(a => a.status === 'present').length);
+                absentData.push(dayRecs.filter(a => a.status === 'absent').length);
+                lateData.push(dayRecs.filter(a => a.status === 'late').length);
+            }
+
+            // Destroy previous chart
+            if (dashboardChartInstance) {
+                dashboardChartInstance.destroy();
+            }
+
+            const isDark = document.body.classList.contains('dark-mode');
+            const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)';
+            const textColor = isDark ? '#94a3b8' : '#64748b';
+
+            dashboardChartInstance = new Chart(canvas, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: translate('present') || 'Present',
+                            data: presentData,
+                            backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                            borderRadius: 4,
+                            borderSkipped: false
+                        },
+                        {
+                            label: translate('late') || 'Late',
+                            data: lateData,
+                            backgroundColor: 'rgba(245, 158, 11, 0.7)',
+                            borderRadius: 4,
+                            borderSkipped: false
+                        },
+                        {
+                            label: translate('absent') || 'Absent',
+                            data: absentData,
+                            backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                            borderRadius: 4,
+                            borderSkipped: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: { color: textColor, font: { size: 11 }, usePointStyle: true, pointStyle: 'circle' }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            stacked: true,
+                            grid: { display: false },
+                            ticks: { color: textColor, font: { size: 11 } }
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            grid: { color: gridColor },
+                            ticks: { color: textColor, font: { size: 11 }, stepSize: 1 }
+                        }
+                    }
+                }
+            });
         }
 
         // PDF Generation Functions
