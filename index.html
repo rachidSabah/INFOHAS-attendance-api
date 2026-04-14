@@ -522,7 +522,7 @@
             font-weight: 600;
             transition: all 0.3s ease;
             background: transparent;
-            color: white;
+            color: var(--text-light);
             min-width: 40px;
         }
 
@@ -587,7 +587,7 @@
 
         .btn-warning {
             background: linear-gradient(135deg, var(--warning), #d97706);
-            color: white;
+            color: #1e293b;
         }
 
         .btn-danger {
@@ -977,6 +977,7 @@
             text-align: center;
             background: var(--secondary);
             border: 1px solid var(--border);
+            color: var(--text);
         }
         
         .stat-card.success {
@@ -1001,6 +1002,7 @@
             font-size: 12px;
             text-transform: uppercase;
             font-weight: 500;
+            color: var(--text-light);
         }
         
         .preview-table-container {
@@ -1306,7 +1308,7 @@
         }
 
         .badge-success { background: var(--success); color: white; }
-        .badge-warning { background: var(--warning); color: white; }
+        .badge-warning { background: var(--warning); color: #1e293b; }
         .badge-danger { background: var(--danger); color: white; }
         .badge-secondary { background: var(--secondary); color: var(--text); }
         .badge-primary { background: var(--primary); color: white; }
@@ -1337,8 +1339,8 @@
 
         .attendance-btn.present { background: var(--success); color: white; }
         .attendance-btn.absent { background: var(--danger); color: white; }
-        .attendance-btn.late { background: var(--warning); color: white; }
-        .attendance-btn.excused { background: var(--text-light); color: white; }
+        .attendance-btn.late { background: var(--warning); color: #1e293b; }
+        .attendance-btn.excused { background: var(--text-light); color: var(--dark); }
 
         /* Toast Notifications */
         .toast {
@@ -2164,13 +2166,13 @@
         .data-stat-number {
             font-size: 24px;
             font-weight: bold;
-            color: white;
+            color: var(--text);
             display: block;
         }
 
         .data-stat-label {
             font-size: 12px;
-            color: rgba(255, 255, 255, 0.8);
+            color: var(--text-light);
             text-transform: uppercase;
         }
 
@@ -2469,15 +2471,15 @@
         .badge-completed { background: var(--success); color: white; }
         .badge-overdue { background: var(--danger); color: white; }
         .badge-open { background: #06b6d4; color: white; }
-        .badge-investigating { background: var(--warning); color: white; }
+        .badge-investigating { background: var(--warning); color: #1e293b; }
         .badge-resolved { background: var(--success); color: white; }
-        .badge-closed { background: var(--text-light); color: white; }
+        .badge-closed { background: var(--text-light); color: var(--dark); }
         .badge-low { background: var(--success); color: white; }
         .badge-medium { background: var(--primary); color: white; }
-        .badge-high { background: var(--warning); color: white; }
+        .badge-high { background: var(--warning); color: #1e293b; }
         .badge-urgent { background: var(--danger); color: white; }
         .badge-minor { background: var(--success); color: white; }
-        .badge-major { background: var(--warning); color: white; }
+        .badge-major { background: var(--warning); color: #1e293b; }
         .badge-critical { background: var(--danger); color: white; }
 
         /* Task/Incident detail view */
@@ -2575,6 +2577,173 @@
         .dark-mode .color-picker-dropdown {
             background: rgba(30, 41, 59, 0.98);
             border-color: #334155;
+        }
+
+        /* ==================== COMPREHENSIVE DARK MODE OVERRIDES ==================== */
+
+        .dark-mode .modal-content {
+            background: rgba(30, 41, 59, 0.98);
+            border-color: rgba(51, 65, 85, 0.5);
+        }
+
+        .dark-mode .form-input,
+        .dark-mode .form-select,
+        .dark-mode .form-textarea {
+            background: rgba(15, 23, 42, 0.8);
+            color: var(--text);
+            border-color: var(--border);
+        }
+
+        .dark-mode .form-input:focus,
+        .dark-mode .form-select:focus,
+        .dark-mode .form-textarea:focus {
+            background: rgba(15, 23, 42, 0.95);
+            border-color: var(--primary);
+        }
+
+        .dark-mode .table-container {
+            background: rgba(30, 41, 59, 0.95);
+            border-color: rgba(51, 65, 85, 0.3);
+        }
+
+        .dark-mode .table th {
+            background: rgba(15, 23, 42, 0.8);
+            color: var(--text);
+        }
+
+        .dark-mode .table td {
+            color: var(--text);
+        }
+
+        .dark-mode .csv-preview {
+            background: rgba(30, 41, 59, 0.8);
+            border-color: var(--border);
+        }
+
+        .dark-mode .preview-table th {
+            background: rgba(15, 23, 42, 0.8);
+            color: var(--text);
+        }
+
+        .dark-mode .preview-table td {
+            color: var(--text);
+        }
+
+        .dark-mode .calendar-container {
+            background: rgba(30, 41, 59, 0.95);
+        }
+
+        .dark-mode .calendar-day {
+            background: rgba(30, 41, 59, 0.8);
+            color: var(--text);
+        }
+
+        .dark-mode .calendar-day:hover {
+            background: rgba(99, 102, 241, 0.2);
+        }
+
+        .dark-mode .chart-card {
+            background: rgba(30, 41, 59, 0.95);
+        }
+
+        .dark-mode .data-stat {
+            background: rgba(30, 41, 59, 0.95);
+        }
+
+        .dark-mode .module-card {
+            background: rgba(30, 41, 59, 0.95);
+        }
+
+        .dark-mode .login-card {
+            background: rgba(30, 41, 59, 0.95);
+        }
+
+        .dark-mode .rich-editor {
+            background: rgba(15, 23, 42, 0.95);
+            color: var(--text);
+        }
+
+        .dark-mode .editor-btn {
+            background: rgba(30, 41, 59, 0.8);
+            color: var(--text);
+        }
+
+        .dark-mode .photo-upload {
+            background: rgba(30, 41, 59, 0.5);
+            border-color: var(--border);
+        }
+
+        .dark-mode .detail-section {
+            background: rgba(30, 41, 59, 0.5);
+        }
+
+        .dark-mode .table-loading {
+            background: rgba(30, 41, 59, 0.8);
+        }
+
+        .dark-mode .tab.active {
+            background: var(--secondary);
+            color: var(--primary);
+        }
+
+        .dark-mode .lang-btn.active {
+            background: var(--secondary);
+            color: var(--primary);
+        }
+
+        .dark-mode .file-upload-area {
+            background: rgba(99, 102, 241, 0.08);
+            border-color: var(--border);
+        }
+
+        .dark-mode .csv-info {
+            background: rgba(16, 185, 129, 0.08);
+            border-color: rgba(16, 185, 129, 0.2);
+        }
+
+        .dark-mode .csv-info h4 {
+            color: var(--success);
+        }
+
+        .dark-mode .csv-info li {
+            color: var(--text);
+        }
+
+        .dark-mode .csv-assign-section {
+            background: rgba(99, 102, 241, 0.08);
+            border-color: rgba(99, 102, 241, 0.2);
+        }
+
+        .dark-mode .batch-assign-bar {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(99, 102, 241, 0.2));
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+
+        .dark-mode .badge-secondary {
+            background: var(--secondary);
+            color: var(--text);
+        }
+
+        .dark-mode .close-btn {
+            color: var(--text);
+        }
+
+        .dark-mode .close-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Fix data-stat-number/label in dark mode for dashboard */
+        .dark-mode .data-stat-number {
+            color: var(--text);
+        }
+
+        .dark-mode .data-stat-label {
+            color: var(--text-light);
+        }
+
+        /* Ensure teacher cards work in dark mode */
+        .dark-mode .teacher-card {
+            background: rgba(30, 41, 59, 0.95) !important;
         }
 
         .color-option {
@@ -7757,7 +7926,7 @@
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                                     <div>
                                         <h4 style="margin: 0;">${template.name}</h4>
-                                        <small style="color: var(--text-secondary); font-style: italic;">${categoryLabels[template.category] || template.category || 'Custom'}</small>
+                                        <small style="color: var(--text-light); font-style: italic;">${categoryLabels[template.category] || template.category || 'Custom'}</small>
                                     </div>
                                     <div>
                                         <button class="btn btn-sm btn-secondary" onclick="editTemplate('${template.id}')" title="Edit">✏️</button>
@@ -8099,7 +8268,7 @@
                                 <div class="rich-editor">
                                     <div class="editor-toolbar">
                                         <div style="margin-bottom: 8px;">
-                                            <small style="color: var(--text-secondary); margin-right: 10px;">Quick Variables:</small>
+                                            <small style="color: var(--text-light); margin-right: 10px;">Quick Variables:</small>
                                             <button type="button" class="editor-btn" onclick="insertVariable('{student_name}')">{student_name}</button>
                                             <button type="button" class="editor-btn" onclick="insertVariable('{guardian_name}')">{guardian_name}</button>
                                             <button type="button" class="editor-btn" onclick="insertVariable('{class}')">{class}</button>
@@ -8108,7 +8277,7 @@
                                             <button type="button" class="editor-btn" onclick="insertVariable('{school_name}')">{school_name}</button>
                                         </div>
                                         <div>
-                                            <small style="color: var(--text-secondary); margin-right: 10px;">Template Examples:</small>
+                                            <small style="color: var(--text-light); margin-right: 10px;">Template Examples:</small>
                                             <button type="button" class="editor-btn btn-info" onclick="loadTemplateExample('absence')">📝 Absence</button>
                                             <button type="button" class="editor-btn btn-info" onclick="loadTemplateExample('late')">⏰ Late</button>
                                             <button type="button" class="editor-btn btn-info" onclick="loadTemplateExample('meeting')">🤝 Meeting</button>
@@ -9723,7 +9892,7 @@
             
             teachersList.innerHTML = teachers.map(teacher => {
                 return `
-                    <div class="teacher-card" style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center;">
+                    <div class="teacher-card" style="border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; background: var(--secondary); border: 1px solid var(--border);">
                         <div style="flex: 1;">
                             <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
                                 <div style="width: 50px; height: 50px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px;">
@@ -9794,7 +9963,7 @@
             
             teachersList.innerHTML = filteredTeachers.map(teacher => {
                 return `
-                    <div class="teacher-card" style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center;">
+                    <div class="teacher-card" style="border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; background: var(--secondary); border: 1px solid var(--border);">
                         <div style="flex: 1;">
                             <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
                                 <div style="width: 50px; height: 50px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px;">
