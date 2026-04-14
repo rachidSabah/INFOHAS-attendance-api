@@ -183,6 +183,29 @@ export default {
         return jsonResponse({ success: true, data: { id, ...body } }, 201);
       }
 
+      if (path === '/api/students/batch-assign-class' && method === 'POST') {
+        const body = await request.json();
+        const { studentIds, classId } = body;
+        if (!Array.isArray(studentIds) || studentIds.length === 0) {
+          return errorResponse('studentIds array is required');
+        }
+        if (!classId) {
+          return errorResponse('classId is required');
+        }
+        // Verify class exists
+        const classExists = await env.DB.prepare('SELECT id FROM classes WHERE id = ?').bind(classId).first();
+        if (!classExists) {
+          return errorResponse('Class not found', 404);
+        }
+        let updated = 0;
+        for (const studentId of studentIds) {
+          await env.DB.prepare('UPDATE students SET class = ?, group_name = ?, updated_at = datetime("now") WHERE id = ?')
+            .bind(classId, classId, studentId).run();
+          updated++;
+        }
+        return jsonResponse({ success: true, data: { updated, classId } });
+      }
+
       if (path.match(/^\/api\/students\/[^/]+$/) && method === 'PUT') {
         const id = path.split('/').pop();
         const body = await request.json();

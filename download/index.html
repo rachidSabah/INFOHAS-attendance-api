@@ -1736,6 +1736,32 @@
 
         /* ---- SMALL PHONES: 320px - 480px ---- */
         @media (max-width: 480px) {
+            /* Batch assign bar responsive */
+            .batch-assign-bar {
+                flex-direction: column;
+                gap: 10px;
+                padding: 10px 12px;
+            }
+            .batch-assign-bar-left, .batch-assign-bar-right {
+                width: 100%;
+                flex-wrap: wrap;
+            }
+            .batch-assign-bar-right {
+                justify-content: flex-start;
+            }
+            .batch-assign-bar-right select {
+                min-width: 100% !important;
+            }
+            .csv-assign-section {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            .csv-assign-section select {
+                width: 100%;
+                min-width: auto !important;
+            }
+
             /* Header adjustments */
             .header {
                 padding: 10px;
@@ -4395,7 +4421,25 @@
                 password_strength_strong: 'Strong',
                 enter_current_password: 'Enter current password',
                 enter_new_password: 'Enter new password',
-                confirm_new_password_placeholder: 'Confirm new password'
+                confirm_new_password_placeholder: 'Confirm new password',
+
+                // Batch Assign Class
+                batch_select: 'Batch Select',
+                select_all: 'Select All',
+                assign_to_class: 'Assign to Class',
+                select_class_group: 'Select Class/Group',
+                students_selected: 'student(s) selected',
+                students_assigned_to: 'student(s) assigned to',
+                select_students_and_class: 'Please select students and a class',
+                unassigned: 'Unassigned',
+                assign_all_to_class: 'Assign imported students to class/group:',
+                no_class_keep_existing: 'No class (keep existing)',
+                apply_to_selected: 'Apply to Selected',
+                apply_to_all: 'Apply to All',
+                select_rows_first: 'Please select rows first',
+                rows_assigned: 'row(s) assigned to',
+                no_valid_selected: 'No valid records selected',
+                no_class: 'No class'
             },
             fr: {
                 // Navigation
@@ -4744,7 +4788,25 @@
                 password_strength_strong: 'Fort',
                 enter_current_password: 'Entrez le mot de passe actuel',
                 enter_new_password: 'Entrez le nouveau mot de passe',
-                confirm_new_password_placeholder: 'Confirmez le nouveau mot de passe'
+                confirm_new_password_placeholder: 'Confirmez le nouveau mot de passe',
+
+                // Batch Assign Class
+                batch_select: 'Sélection multiple',
+                select_all: 'Tout sélectionner',
+                assign_to_class: 'Affecter à une classe',
+                select_class_group: 'Sélectionner classe/groupe',
+                students_selected: 'étudiant(s) sélectionné(s)',
+                students_assigned_to: 'étudiant(s) affecté(s) à',
+                select_students_and_class: 'Veuillez sélectionner des étudiants et une classe',
+                unassigned: 'Non affecté',
+                assign_all_to_class: 'Affecter les étudiants importés à la classe/groupe :',
+                no_class_keep_existing: 'Pas de classe (conserver existant)',
+                apply_to_selected: 'Appliquer aux sélectionnés',
+                apply_to_all: 'Appliquer à tous',
+                select_rows_first: 'Veuillez d\'abord sélectionner des lignes',
+                rows_assigned: 'ligne(s) affectée(s) à',
+                no_valid_selected: 'Aucun enregistrement valide sélectionné',
+                no_class: 'Pas de classe'
             }
         };
 
@@ -5836,7 +5898,8 @@
                                         </div>
                                         <div class="import-actions">
                                             <button type="button" class="btn btn-secondary" onclick="cancelCSVImport()">Cancel</button>
-                                            <button type="button" class="btn btn-success" onclick="confirmCSVImport()">Import All Students</button>
+                                            <button type="button" class="btn btn-info" onclick="confirmCSVImportSelected()">☑️ Import Selected Only</button>
+                                            <button type="button" class="btn btn-success" onclick="confirmCSVImport()">📥 Import All Students</button>
                                         </div>
                                     </div>
                                 </div>
@@ -6349,11 +6412,28 @@
                     </div>
                 </div>
             `;
-            
+
+            // Build class assignment section
+            const classes = loadFromStorage(STORAGE_KEYS.CLASSES) || [];
+            let classOptions = '<option value="">' + (translate('no_class_keep_existing') || 'No class (keep existing)') + '</option>';
+            classes.forEach(cls => {
+                classOptions += `<option value="${cls.id}">${cls.name}</option>`;
+            });
+
+            let assignSectionHTML = `
+                <div class="csv-assign-section">
+                    <label style="font-weight:600;white-space:nowrap;">🏷️ ${translate('assign_all_to_class') || 'Assign all imported students to class/group:'}</label>
+                    <select id="csvBulkClassSelect" class="form-select" style="min-width:200px;">${classOptions}</select>
+                    <button type="button" class="btn btn-secondary" onclick="applyCsvClassToSelected()" style="white-space:nowrap;">☑️ ${translate('apply_to_selected') || 'Apply to Selected'}</button>
+                    <button type="button" class="btn btn-primary" onclick="applyCsvClassToAll()" style="white-space:nowrap;">📌 ${translate('apply_to_all') || 'Apply to All'}</button>
+                </div>
+            `;
+
             let tableHTML = `
                 <table class="preview-table">
                     <thead>
                         <tr>
+                            <th style="width:40px;"><input type="checkbox" id="csvSelectAll" class="csv-row-checkbox" onchange="toggleCsvSelectAll(this.checked)"></th>
                             <th>Status</th>
                             <th>Full Name</th>
                             <th>Student ID</th>
@@ -6365,31 +6445,93 @@
                     <tbody>
             `;
             
-            csvData.slice(0, 10).forEach(row => {
+            csvData.forEach((row, idx) => {
                 const statusIcon = row.valid ? '✅' : '❌';
                 const statusText = row.isDuplicate ? 'Duplicate' : 'Valid';
                 const rowClass = row.valid ? '' : 'error-row';
+                const disabled = row.valid ? '' : 'disabled';
+                const currentClassName = row.className || (translate('unassigned') || 'Unassigned');
+                const effectiveClassName = row._overrideClassName || currentClassName;
                 
                 tableHTML += `
-                    <tr class="${rowClass}">
+                    <tr class="${rowClass}" data-csv-idx="${idx}">
+                        <td><input type="checkbox" class="csv-row-checkbox" data-csv-idx="${idx}" ${row.valid ? '' : 'disabled'} onchange="updateCsvSelection()"></td>
                         <td><span title="${statusText}">${statusIcon}</span></td>
                         <td>${row.fullName}</td>
                         <td>${row.studentId}</td>
-                        <td>${row.className}</td>
-                        <td>${row.academicYear}</td>
-                        <td>${row.guardianName}</td>
+                        <td class="csv-class-cell" data-csv-idx="${idx}">${effectiveClassName}</td>
+                        <td>${row.academicYear || '-'}</td>
+                        <td>${row.guardianName || '-'}</td>
                     </tr>
                 `;
             });
             
-            if (csvData.length > 10) {
-                tableHTML += `<tr><td colspan="6">... and ${csvData.length - 10} more rows</td></tr>`;
-            }
-            
             tableHTML += '</tbody></table>';
-            tableContainer.innerHTML = tableHTML;
+            tableContainer.innerHTML = assignSectionHTML + tableHTML;
             
             preview.classList.remove('hidden');
+        }
+
+        // CSV row selection helpers
+        function toggleCsvSelectAll(checked) {
+            const checkboxes = document.querySelectorAll('.csv-row-checkbox[data-csv-idx]');
+            checkboxes.forEach(cb => {
+                if (!cb.disabled) cb.checked = checked;
+            });
+        }
+
+        function updateCsvSelection() {
+            const headerCb = document.getElementById('csvSelectAll');
+            const allCbs = document.querySelectorAll('.csv-row-checkbox[data-csv-idx]:not(:disabled)');
+            if (headerCb) {
+                headerCb.checked = allCbs.length > 0 && Array.from(allCbs).every(cb => cb.checked);
+            }
+        }
+
+        function applyCsvClassToSelected() {
+            const classId = document.getElementById('csvBulkClassSelect').value;
+            const classes = loadFromStorage(STORAGE_KEYS.CLASSES) || [];
+            const className = classId ? (classes.find(c => c.id === classId)?.name || '') : '';
+            
+            const checkboxes = document.querySelectorAll('.csv-row-checkbox[data-csv-idx]:checked');
+            if (checkboxes.length === 0) {
+                showToast(translate('select_rows_first') || 'Please select rows first', 'error');
+                return;
+            }
+
+            let count = 0;
+            checkboxes.forEach(cb => {
+                const idx = parseInt(cb.getAttribute('data-csv-idx'));
+                if (csvData[idx] && csvData[idx].valid) {
+                    csvData[idx].classId = classId;
+                    csvData[idx]._overrideClassName = className || (translate('unassigned') || 'Unassigned');
+                    // Update the class cell in the table
+                    const cell = document.querySelector(`.csv-class-cell[data-csv-idx="${idx}"]`);
+                    if (cell) cell.textContent = className || (translate('unassigned') || 'Unassigned');
+                    count++;
+                }
+            });
+
+            showToast(`🏷️ ${count} ${translate('rows_assigned') || 'row(s) assigned to'} ${className || (translate('no_class') || 'No class')}`);
+        }
+
+        function applyCsvClassToAll() {
+            const classId = document.getElementById('csvBulkClassSelect').value;
+            const classes = loadFromStorage(STORAGE_KEYS.CLASSES) || [];
+            const className = classId ? (classes.find(c => c.id === classId)?.name || '') : '';
+
+            let count = 0;
+            csvData.forEach((row, idx) => {
+                if (row.valid) {
+                    row.classId = classId;
+                    row._overrideClassName = className || (translate('unassigned') || 'Unassigned');
+                    const cell = document.querySelector(`.csv-class-cell[data-csv-idx="${idx}"]`);
+                    if (cell) cell.textContent = className || (translate('unassigned') || 'Unassigned');
+                    count++;
+                }
+            });
+
+            showToast(`🏷️ ${count} ${translate('rows_assigned') || 'row(s) assigned to'} ${className || (translate('no_class') || 'No class')}`);
         }
 
         function cancelCSVImport() {
@@ -6440,6 +6582,53 @@
             loadStudents();
             
             // Reset CSV import
+            cancelCSVImport();
+        }
+
+        function confirmCSVImportSelected() {
+            // Import only the CSV rows that are checked in the preview
+            const checkboxes = document.querySelectorAll('.csv-row-checkbox[data-csv-idx]:checked');
+            if (checkboxes.length === 0) {
+                showToast(translate('select_rows_first') || 'Please select rows to import', 'error');
+                return;
+            }
+
+            const selectedIndices = new Set();
+            checkboxes.forEach(cb => {
+                selectedIndices.add(parseInt(cb.getAttribute('data-csv-idx')));
+            });
+
+            const selectedData = csvData.filter((d, idx) => d.valid && selectedIndices.has(idx));
+
+            if (selectedData.length === 0) {
+                showToast(translate('no_valid_selected') || 'No valid records selected', 'error');
+                return;
+            }
+
+            const students = loadFromStorage(STORAGE_KEYS.STUDENTS) || [];
+            selectedData.forEach(data => {
+                const student = {
+                    id: generateId(),
+                    fullName: data.fullName,
+                    studentId: data.studentId,
+                    classId: data.classId || '',
+                    academicYear: data.academicYear,
+                    status: 'active',
+                    guardianName: data.guardianName,
+                    guardianPhone: data.guardianPhone,
+                    email: data.email,
+                    address: '',
+                    notes: 'Imported via CSV (selected)',
+                    photo: null,
+                    createdAt: new Date().toISOString()
+                };
+                students.push(student);
+            });
+
+            saveToStorage(STORAGE_KEYS.STUDENTS, students);
+            showToast(`✅ Successfully imported ${selectedData.length} selected student(s)`);
+            closeModal('importStudentsModal');
+            loadStudents();
             cancelCSVImport();
         }
 
@@ -10786,6 +10975,10 @@
             displayStudents(filteredStudents, classes);
         }
 
+        // Batch select mode state
+        let batchSelectMode = false;
+        let selectedStudentIds = new Set();
+
         function displayStudents(students, classes) {
             const tbody = document.getElementById('studentsTableBody');
             if (!tbody) return;
@@ -10798,9 +10991,12 @@
                     terminated: 'danger',
                     graduated: 'primary'
                 };
+                const isChecked = selectedStudentIds.has(student.id) ? 'checked' : '';
+                const batchCol = batchSelectMode ? `<td class="batch-select-col"><input type="checkbox" class="batch-checkbox" data-student-id="${student.id}" ${isChecked} onchange="toggleStudentSelection('${student.id}', this.checked)"></td>` : '';
                 
                 return `
                     <tr>
+                        ${batchCol}
                         <td>
                             ${student.photo ? 
                                 `<img src="${student.photo}" class="photo-preview" style="width: 40px; height: 40px;">` : 
@@ -10809,7 +11005,7 @@
                         </td>
                         <td><strong>${student.fullName}</strong></td>
                         <td>${student.studentId}</td>
-                        <td>${studentClass ? studentClass.name : '-'}</td>
+                        <td>${studentClass ? studentClass.name : '<span style="color:var(--text-light);font-style:italic;">Unassigned</span>'}</td>
                         <td>${student.academicYear || '-'}</td>
                         <td><span class="badge badge-${statusColors[student.status || 'active']}">${translate(student.status || 'active')}</span></td>
                         <td>${student.guardianName || '-'}</td>
@@ -10832,6 +11028,133 @@
                     </tr>
                 `;
             }).join('');
+
+            // Update batch select column visibility
+            updateBatchSelectVisibility();
+        }
+
+        // ==================== BATCH SELECT & ASSIGN CLASS FUNCTIONS ====================
+
+        function enterBatchSelectMode() {
+            batchSelectMode = true;
+            selectedStudentIds = new Set();
+            document.getElementById('batchAssignBar').style.display = 'flex';
+            document.getElementById('batchSelectToggle').style.display = 'none';
+            updateBatchSelectVisibility();
+            updateBatchAssignBar();
+            // Populate batch class dropdown
+            const classes = loadFromStorage(STORAGE_KEYS.CLASSES) || [];
+            const select = document.getElementById('batchClassSelect');
+            select.innerHTML = '<option value="">' + (translate('select_class_group') || 'Select Class/Group') + '</option>';
+            classes.forEach(cls => {
+                select.innerHTML += `<option value="${cls.id}">${cls.name}</option>`;
+            });
+            // Refresh display
+            filterStudents();
+        }
+
+        function exitBatchSelectMode() {
+            batchSelectMode = false;
+            selectedStudentIds = new Set();
+            document.getElementById('batchAssignBar').style.display = 'none';
+            document.getElementById('batchSelectToggle').style.display = '';
+            updateBatchSelectVisibility();
+            // Refresh display
+            filterStudents();
+        }
+
+        function updateBatchSelectVisibility() {
+            const cols = document.querySelectorAll('.batch-select-col');
+            cols.forEach(col => {
+                col.style.display = batchSelectMode ? '' : 'none';
+            });
+        }
+
+        function toggleStudentSelection(studentId, isChecked) {
+            if (isChecked) {
+                selectedStudentIds.add(studentId);
+            } else {
+                selectedStudentIds.delete(studentId);
+            }
+            updateBatchAssignBar();
+            // Update header checkbox
+            const headerCb = document.getElementById('headerSelectAll');
+            const allCbs = document.querySelectorAll('.batch-checkbox');
+            if (headerCb) {
+                headerCb.checked = allCbs.length > 0 && Array.from(allCbs).every(cb => cb.checked);
+            }
+        }
+
+        function toggleSelectAllStudents(checked) {
+            const checkboxes = document.querySelectorAll('.batch-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = checked;
+                const sid = cb.getAttribute('data-student-id');
+                if (sid) {
+                    if (checked) {
+                        selectedStudentIds.add(sid);
+                    } else {
+                        selectedStudentIds.delete(sid);
+                    }
+                }
+            });
+            updateBatchAssignBar();
+        }
+
+        function updateBatchAssignBar() {
+            const count = selectedStudentIds.size;
+            const countEl = document.getElementById('selectedStudentCount');
+            const assignBtn = document.getElementById('batchAssignBtn');
+            const classSelect = document.getElementById('batchClassSelect');
+            if (countEl) {
+                countEl.textContent = count > 0 ? `${count} ${translate('students_selected') || 'student(s) selected'}` : '';
+            }
+            // Enable assign button only when students are selected AND a class is chosen
+            const hasClass = classSelect && classSelect.value !== '';
+            if (assignBtn) {
+                assignBtn.disabled = !(count > 0 && hasClass);
+            }
+            // Listen for class selection changes
+            if (classSelect && !classSelect._listenerAdded) {
+                classSelect.addEventListener('change', function() {
+                    if (assignBtn) assignBtn.disabled = !(selectedStudentIds.size > 0 && this.value !== '');
+                });
+                classSelect._listenerAdded = true;
+            }
+        }
+
+        async function batchAssignClass() {
+            const classId = document.getElementById('batchClassSelect').value;
+            if (!classId || selectedStudentIds.size === 0) {
+                showToast(translate('select_students_and_class') || 'Please select students and a class', 'error');
+                return;
+            }
+
+            const classes = loadFromStorage(STORAGE_KEYS.CLASSES) || [];
+            const className = classes.find(c => c.id === classId)?.name || '';
+            const students = loadFromStorage(STORAGE_KEYS.STUDENTS) || [];
+            let updatedCount = 0;
+
+            students.forEach(student => {
+                if (selectedStudentIds.has(student.id)) {
+                    student.classId = classId;
+                    updatedCount++;
+                }
+            });
+
+            saveToStorage(STORAGE_KEYS.STUDENTS, students);
+
+            // Try to sync via API
+            try {
+                const studentIds = Array.from(selectedStudentIds);
+                await apiPost('/students/batch-assign-class', { studentIds, classId });
+            } catch (e) {
+                console.warn('API batch assign failed, local update saved:', e);
+            }
+
+            showToast(`✅ ${updatedCount} ${translate('students_assigned_to') || 'student(s) assigned to'} ${className}`);
+            exitBatchSelectMode();
+            loadStudents();
         }
 
         // Initialize default data when app loads
