@@ -3329,6 +3329,30 @@
             border-color: #334155;
             color: #94a3b8;
         }
+
+        /* Print Styles */
+        @media print {
+            body { background: white !important; }
+            .sidebar, .header, .hamburger-btn, .toast, .confirm-overlay,
+            .shortcuts-overlay, .global-search-overlay, .notif-panel,
+            .btn, button, .attendance-actions, .quick-card-actions,
+            .batch-assign-bar, #attendanceStatsBar, .attendance-stats-bar,
+            .quick-mode-container, #attendanceNormalView .attendance-btn,
+            .empty-state-action, .notif-badge, .kbd-hint { display: none !important; }
+            .main-content { padding: 0 !important; margin: 0 !important; }
+            .container { display: block !important; }
+            .page { display: block !important; }
+            .hidden { display: block !important; }
+            .card { box-shadow: none !important; border: 1px solid #ddd !important; break-inside: avoid; }
+            .table th { background: #f0f0f0 !important; color: #333 !important; }
+            .table td, .table th { padding: 8px !important; font-size: 12px !important; }
+            .badge { border: 1px solid #ccc !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+            .print-header { display: block !important; text-align: center; margin-bottom: 20px; }
+            .print-header h1 { font-size: 18px; margin-bottom: 4px; }
+            .print-header p { font-size: 12px; color: #666; }
+            @page { margin: 1cm; size: A4 landscape; }
+        }
+        .print-header { display: none; }
     </style>
 </head>
 <body>
@@ -3708,6 +3732,11 @@
 
             <!-- Attendance Page -->
             <div id="attendancePage" class="page hidden">
+                <!-- Print Header (visible only when printing) -->
+                <div class="print-header">
+                    <h1>INFOHAS - <span data-translate="attendance_sheet">Attendance Sheet</span></h1>
+                    <p id="printDateInfo"></p>
+                </div>
                 <div class="card">
                     <div class="card-header">
                         <h2 class="card-title">📅 <span data-translate="attendance_tracking">Attendance Tracking</span></h2>
@@ -3719,6 +3748,7 @@
                             <button class="btn btn-success" onclick="markAllPresent()">✅ <span data-translate="mark_all_present">Mark All Present</span></button>
                             <button class="btn btn-warning" onclick="markAllAbsent()">❌ <span data-translate="mark_all_absent">Mark All Absent</span></button>
                             <button class="btn btn-primary" onclick="generateAttendancePDF()">📑 <span data-translate="generate_pdf">Generate PDF</span></button>
+                            <button class="btn btn-secondary" onclick="printAttendanceSheet()">🖨️ <span data-translate="print">Print</span></button>
                             <button class="btn btn-secondary" id="attendanceModeToggle" onclick="toggleAttendanceMode()" title="Toggle Quick Mode">
                                 ⚡ <span data-translate="quick_mode">Quick Mode</span>
                             </button>
@@ -5421,6 +5451,10 @@
                 // Global Search
                 type_to_search: 'Type to search across students, classes, and tasks...',
                 no_results_found: 'No results found for',
+
+                // Print
+                print: 'Print',
+                attendance_sheet: 'Attendance Sheet',
                 incidents: 'Incidents',
 
                 // Confirm & Undo
@@ -5892,6 +5926,10 @@
                 // Recherche globale
                 type_to_search: 'Tapez pour rechercher parmi les étudiants, classes et tâches...',
                 no_results_found: 'Aucun résultat pour',
+
+                // Imprimer
+                print: 'Imprimer',
+                attendance_sheet: 'Feuille de présence',
                 incidents: 'Incidents',
 
                 // Confirmation et annulation
@@ -8854,6 +8892,23 @@
                 });
                 showToast(`Marked ${filteredStudents.length} students as absent`);
             }
+        }
+
+        function printAttendanceSheet() {
+            // Update print header info
+            const dateVal = document.getElementById('attendanceDate')?.value || new Date().toISOString().split('T')[0];
+            const classFilter = document.getElementById('attendanceClassFilter')?.value;
+            const classes = loadFromStorage(STORAGE_KEYS.CLASSES) || [];
+            const className = classFilter ? (classes.find(c => c.id === classFilter)?.name || '') : (translate('all_classes') || 'All Classes');
+            const printInfo = document.getElementById('printDateInfo');
+            if (printInfo) {
+                printInfo.textContent = `${translate('date') || 'Date'}: ${dateVal} | ${translate('class') || 'Class'}: ${className}`;
+            }
+            // Switch to normal view for printing
+            if (attendanceQuickMode) {
+                toggleAttendanceMode();
+            }
+            setTimeout(() => window.print(), 300);
         }
 
         // ===== Attendance Quick Mode =====
