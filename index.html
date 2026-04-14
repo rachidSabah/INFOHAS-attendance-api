@@ -3353,6 +3353,42 @@
             @page { margin: 1cm; size: A4 landscape; }
         }
         .print-header { display: none; }
+
+        /* Onboarding Tour */
+        .tour-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 2000;
+            display: none;
+        }
+        .tour-overlay.active { display: block; }
+        .tour-highlight {
+            position: relative; z-index: 2001;
+            box-shadow: 0 0 0 4px rgba(99,102,241,0.5), 0 0 0 9999px rgba(0,0,0,0.6);
+            border-radius: 12px;
+        }
+        .tour-tooltip {
+            position: fixed; z-index: 2002;
+            background: white; color: #1e293b;
+            border-radius: 14px; padding: 20px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+            max-width: 340px; width: 90vw;
+            animation: tourFadeIn 0.3s ease;
+        }
+        @keyframes tourFadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .tour-tooltip-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+        .tour-tooltip-text { font-size: 0.88rem; color: #64748b; line-height: 1.5; margin-bottom: 16px; }
+        .tour-tooltip-actions { display: flex; justify-content: space-between; align-items: center; }
+        .tour-step-dots { display: flex; gap: 5px; }
+        .tour-dot { width: 8px; height: 8px; border-radius: 50%; background: #e2e8f0; transition: all 0.2s; }
+        .tour-dot.active { background: #6366f1; width: 20px; border-radius: 4px; }
+        .dark-mode .tour-tooltip { background: #1e293b; color: #f1f5f9; }
+        .dark-mode .tour-tooltip-text { color: #94a3b8; }
+        .dark-mode .tour-dot { background: #475569; }
+        .dark-mode .tour-dot.active { background: #818cf8; }
     </style>
 </head>
 <body>
@@ -4660,6 +4696,20 @@
         </div>
     </div>
 
+    <!-- Onboarding Tour Tooltip -->
+    <div id="tourOverlay" class="tour-overlay"></div>
+    <div id="tourTooltip" class="tour-tooltip" style="display:none;">
+        <div class="tour-tooltip-title" id="tourTitle"></div>
+        <div class="tour-tooltip-text" id="tourText"></div>
+        <div class="tour-tooltip-actions">
+            <div class="tour-step-dots" id="tourDots"></div>
+            <div style="display:flex;gap:8px;">
+                <button class="btn btn-sm btn-secondary" id="tourSkipBtn" onclick="endTour()">Skip</button>
+                <button class="btn btn-sm btn-primary" id="tourNextBtn" onclick="nextTourStep()">Next</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Notification -->
     <div id="toast" class="toast"></div>
 
@@ -5455,6 +5505,22 @@
                 // Print
                 print: 'Print',
                 attendance_sheet: 'Attendance Sheet',
+
+                // Onboarding Tour
+                tour_welcome: 'Welcome to INFOHAS!',
+                tour_welcome_text: 'This quick tour will show you the key features. Let\'s get started!',
+                tour_students: 'Students',
+                tour_students_text: 'Manage all your students here. Add, edit, and view student profiles with attendance history.',
+                tour_attendance: 'Attendance',
+                tour_attendance_text: 'Mark daily attendance with Quick Mode or table view. Print sheets and send WhatsApp messages.',
+                tour_notifications: 'Smart Notifications',
+                tour_notifications_text: 'Get alerts for low attendance, unmarked days, and overdue tasks.',
+                tour_search: 'Global Search',
+                tour_search_text: 'Search students, classes, and tasks instantly with Ctrl+K.',
+                tour_theme: 'Theme & Language',
+                tour_theme_text: 'Switch between dark/light mode and English/French anytime.',
+                next: 'Next',
+                done: 'Done',
                 incidents: 'Incidents',
 
                 // Confirm & Undo
@@ -5930,6 +5996,22 @@
                 // Imprimer
                 print: 'Imprimer',
                 attendance_sheet: 'Feuille de présence',
+
+                // Visite guidée
+                tour_welcome: 'Bienvenue à INFOHAS !',
+                tour_welcome_text: 'Cette visite rapide vous montrera les fonctionnalités clés. Commençons !',
+                tour_students: 'Étudiants',
+                tour_students_text: 'Gérez tous vos étudiants ici. Ajoutez, modifiez et consultez les profils avec historique.',
+                tour_attendance: 'Présence',
+                tour_attendance_text: 'Marquez la présence quotidienne en mode rapide ou tableau. Imprimez et envoyez par WhatsApp.',
+                tour_notifications: 'Notifications intelligentes',
+                tour_notifications_text: 'Recevez des alertes pour les présences basses, les jours non marqués et les tâches en retard.',
+                tour_search: 'Recherche globale',
+                tour_search_text: 'Recherchez étudiants, classes et tâches instantanément avec Ctrl+K.',
+                tour_theme: 'Thème et langue',
+                tour_theme_text: 'Basculez entre mode sombre/clair et anglais/français à tout moment.',
+                next: 'Suivant',
+                done: 'Terminé',
                 incidents: 'Incidents',
 
                 // Confirmation et annulation
@@ -6261,6 +6343,7 @@
         function showMainApp() {
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
+            checkOnboarding();
         }
 
         // Continue with more JavaScript functions...
@@ -6932,6 +7015,134 @@
                 closeGlobalSearch();
             }
         });
+
+        // ===== Onboarding Tour =====
+        const TOUR_KEY = 'onboardingCompleted';
+        let tourStep = 0;
+
+        const tourSteps = [
+            {
+                target: '.nav-item[data-page="dashboard"]',
+                title: () => translate('tour_welcome') || 'Welcome to INFOHAS!',
+                text: () => translate('tour_welcome_text') || 'This quick tour will show you the key features. Let\'s get started!',
+                position: 'right'
+            },
+            {
+                target: '.nav-item[data-page="students"]',
+                title: () => translate('tour_students') || 'Students',
+                text: () => translate('tour_students_text') || 'Manage all your students here. Add, edit, and view student profiles with attendance history.',
+                position: 'right'
+            },
+            {
+                target: '.nav-item[data-page="attendance"]',
+                title: () => translate('tour_attendance') || 'Attendance',
+                text: () => translate('tour_attendance_text') || 'Mark daily attendance with Quick Mode or table view. Print sheets and send WhatsApp messages.',
+                position: 'right'
+            },
+            {
+                target: '#notifBellBtn',
+                title: () => translate('tour_notifications') || 'Smart Notifications',
+                text: () => translate('tour_notifications_text') || 'Get alerts for low attendance, unmarked days, and overdue tasks.',
+                position: 'bottom'
+            },
+            {
+                target: 'button[onclick="openGlobalSearch()"]',
+                title: () => translate('tour_search') || 'Global Search',
+                text: () => translate('tour_search_text') || 'Search students, classes, and tasks instantly with Ctrl+K.',
+                position: 'bottom'
+            },
+            {
+                target: '.theme-toggle',
+                title: () => translate('tour_theme') || 'Theme & Language',
+                text: () => translate('tour_theme_text') || 'Switch between dark/light mode and English/French anytime.',
+                position: 'bottom'
+            }
+        ];
+
+        function startTour() {
+            tourStep = 0;
+            showTourStep();
+        }
+
+        function showTourStep() {
+            if (tourStep >= tourSteps.length) {
+                endTour();
+                return;
+            }
+
+            const step = tourSteps[tourStep];
+            const targetEl = document.querySelector(step.target);
+            const tooltip = document.getElementById('tourTooltip');
+            const overlay = document.getElementById('tourOverlay');
+
+            if (!targetEl || !tooltip) { tourStep++; showTourStep(); return; }
+
+            // Remove previous highlight
+            document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
+            targetEl.classList.add('tour-highlight');
+
+            // Update tooltip content
+            document.getElementById('tourTitle').textContent = step.title();
+            document.getElementById('tourText').textContent = step.text();
+
+            // Update dots
+            const dotsEl = document.getElementById('tourDots');
+            dotsEl.innerHTML = tourSteps.map((_, i) =>
+                `<div class="tour-dot ${i === tourStep ? 'active' : ''}"></div>`
+            ).join('');
+
+            // Update button text
+            const nextBtn = document.getElementById('tourNextBtn');
+            nextBtn.textContent = tourStep === tourSteps.length - 1 ? (translate('done') || 'Done') : (translate('next') || 'Next');
+
+            // Show overlay and tooltip
+            overlay.classList.add('active');
+            tooltip.style.display = 'block';
+
+            // Position tooltip near the target
+            const rect = targetEl.getBoundingClientRect();
+            let top, left;
+            if (step.position === 'right') {
+                top = rect.top + rect.height / 2 - 40;
+                left = rect.right + 16;
+            } else if (step.position === 'bottom') {
+                top = rect.bottom + 16;
+                left = rect.left;
+            } else {
+                top = rect.top - 120;
+                left = rect.left;
+            }
+            // Keep within viewport
+            top = Math.max(16, Math.min(top, window.innerHeight - 200));
+            left = Math.max(16, Math.min(left, window.innerWidth - 360));
+            tooltip.style.top = top + 'px';
+            tooltip.style.left = left + 'px';
+
+            // Scroll target into view
+            targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function nextTourStep() {
+            document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
+            tourStep++;
+            showTourStep();
+        }
+
+        function endTour() {
+            document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
+            const tooltip = document.getElementById('tourTooltip');
+            const overlay = document.getElementById('tourOverlay');
+            if (tooltip) tooltip.style.display = 'none';
+            if (overlay) overlay.classList.remove('active');
+            localStorage.setItem(TOUR_KEY, 'true');
+        }
+
+        // Check if first-time user (auto-start tour)
+        function checkOnboarding() {
+            if (!localStorage.getItem(TOUR_KEY)) {
+                setTimeout(startTour, 1500);
+            }
+        }
 
         // Page Management
         function showPage(pageName) {
