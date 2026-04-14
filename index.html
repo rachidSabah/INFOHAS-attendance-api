@@ -2859,6 +2859,50 @@
         .widget-order-item .widget-label { flex: 1; font-weight: 500; color: var(--text); }
         .widget-order-item .widget-toggle { accent-color: var(--primary); width: 18px; height: 18px; cursor: pointer; }
 
+        /* Notification Bell & Panel */
+        .notif-badge {
+            position: absolute; top: -4px; right: -4px;
+            background: var(--danger); color: white;
+            font-size: 0.65rem; font-weight: 700;
+            min-width: 16px; height: 16px;
+            border-radius: 50%; display: inline-flex;
+            align-items: center; justify-content: center;
+            padding: 0 3px; line-height: 1;
+        }
+        .notif-panel {
+            position: absolute; top: 42px; right: 0;
+            width: 340px; max-height: 420px;
+            background: rgba(255,255,255,0.98);
+            backdrop-filter: blur(20px);
+            border-radius: 14px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+            border: 1px solid var(--border);
+            z-index: 500; overflow: hidden;
+            animation: notifSlideIn 0.25s ease;
+        }
+        @keyframes notifSlideIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .dark-mode .notif-panel { background: rgba(30,41,59,0.98); }
+        .notif-panel-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 16px; border-bottom: 1px solid var(--border);
+        }
+        .notif-list { max-height: 350px; overflow-y: auto; }
+        .notif-item {
+            display: flex; gap: 10px; padding: 12px 16px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            transition: background 0.2s;
+            cursor: pointer;
+        }
+        .notif-item:hover { background: rgba(99,102,241,0.05); }
+        .notif-item-icon { font-size: 1.3rem; flex-shrink: 0; }
+        .notif-item-content { flex: 1; min-width: 0; }
+        .notif-item-title { font-size: 0.85rem; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+        .notif-item-text { font-size: 0.78rem; color: var(--text-light); line-height: 1.4; }
+        .notif-empty { padding: 30px; text-align: center; color: var(--text-light); font-size: 0.88rem; }
+
         /* Custom Confirm Dialog */
         .confirm-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px);
@@ -3378,6 +3422,18 @@
                     </div>
                     <button class="theme-toggle btn btn-secondary btn-sm" onclick="toggleTheme()">🌙</button>
                     <button id="colorPickerBtn" class="btn btn-secondary btn-sm" title="Change Color Theme">🎨</button>
+                    <div style="position:relative;">
+                        <button class="btn btn-secondary btn-sm" onclick="toggleNotifications()" title="Notifications" id="notifBellBtn">🔔<span id="notifBadge" class="notif-badge" style="display:none;">0</span></button>
+                        <div id="notifPanel" class="notif-panel" style="display:none;">
+                            <div class="notif-panel-header">
+                                <strong data-translate="notifications">Notifications</strong>
+                                <button class="btn btn-sm" style="font-size:0.75rem;padding:2px 8px;" onclick="clearNotifications()" data-translate="clear_all">Clear All</button>
+                            </div>
+                            <div id="notifList" class="notif-list">
+                                <!-- Dynamically filled -->
+                            </div>
+                        </div>
+                    </div>
                     <button class="btn btn-primary btn-sm" onclick="showExportModal()">📄 <span data-translate="export">Export</span></button>
                 </div>
             </header>
@@ -5294,6 +5350,18 @@
                 attendance_rate: 'Attendance Rate',
                 last_4_weeks: 'Last 4 Weeks',
                 monthly_summary: 'Monthly Summary',
+
+                // Smart Notifications
+                notifications: 'Notifications',
+                clear_all: 'Clear All',
+                no_notifications: 'No new notifications',
+                low_attendance_alert: 'Low Attendance Alert',
+                attendance_not_marked: 'Attendance Not Marked',
+                attendance_not_marked_text: "Today's attendance has not been recorded yet.",
+                overdue_tasks: 'Overdue Tasks',
+                tasks_overdue: 'task(s) are past their due date',
+                high_absence_today: 'High Absence Today',
+                students_absent: 'students are absent today',
                 incidents: 'Incidents',
 
                 // Confirm & Undo
@@ -5749,6 +5817,18 @@
                 attendance_rate: 'Taux de présence',
                 last_4_weeks: '4 dernières semaines',
                 monthly_summary: 'Résumé mensuel',
+
+                // Notifications intelligentes
+                notifications: 'Notifications',
+                clear_all: 'Tout effacer',
+                no_notifications: 'Aucune nouvelle notification',
+                low_attendance_alert: 'Alerte présence basse',
+                attendance_not_marked: 'Présence non marquée',
+                attendance_not_marked_text: "La présence d'aujourd'hui n'a pas encore été enregistrée.",
+                overdue_tasks: 'Tâches en retard',
+                tasks_overdue: 'tâche(s) ont dépassé leur date limite',
+                high_absence_today: 'Forte absence aujourd\'hui',
+                students_absent: 'étudiants sont absents aujourd\'hui',
                 incidents: 'Incidents',
 
                 // Confirmation et annulation
@@ -6502,6 +6582,128 @@
             showToast(translate('settings_reset') || 'Dashboard reset to default!');
         }
 
+        // ===== Smart Notifications =====
+        let notifications = [];
+
+        function generateSmartNotifications() {
+            notifications = [];
+            const students = loadFromStorage(STORAGE_KEYS.STUDENTS) || [];
+            const attendance = loadFromStorage(STORAGE_KEYS.ATTENDANCE) || [];
+            const tasks = loadFromStorage(STORAGE_KEYS.TASKS) || [];
+            const today = new Date().toISOString().split('T')[0];
+
+            // 1. Low attendance alert (< 75%)
+            students.forEach(student => {
+                const studentAtt = attendance.filter(a => a.studentId === student.id);
+                const total = studentAtt.length;
+                if (total >= 5) {
+                    const present = studentAtt.filter(a => a.status === 'present').length;
+                    const rate = Math.round((present / total) * 100);
+                    if (rate < 75) {
+                        notifications.push({
+                            icon: '⚠️',
+                            title: translate('low_attendance_alert') || 'Low Attendance Alert',
+                            text: `${student.fullName} — ${rate}% ${translate('attendance_rate') || 'rate'} (${present}/${total})`,
+                            action: `showStudentProfile('${student.id}')`
+                        });
+                    }
+                }
+            });
+
+            // 2. Unmarked attendance today
+            const todayAtt = attendance.filter(a => a.date === today);
+            if (students.length > 0 && todayAtt.length === 0) {
+                notifications.push({
+                    icon: '📋',
+                    title: translate('attendance_not_marked') || 'Attendance Not Marked',
+                    text: translate('attendance_not_marked_text') || "Today's attendance has not been recorded yet.",
+                    action: "showPage('attendance')"
+                });
+            }
+
+            // 3. Overdue tasks
+            const overdueTasks = tasks.filter(t => t.status !== 'completed' && t.dueDate && t.dueDate < today);
+            if (overdueTasks.length > 0) {
+                notifications.push({
+                    icon: '⏰',
+                    title: translate('overdue_tasks') || 'Overdue Tasks',
+                    text: `${overdueTasks.length} ${translate('tasks_overdue') || 'task(s) are past their due date'}`,
+                    action: "showPage('tasks')"
+                });
+            }
+
+            // 4. High absence today
+            const todayAbsent = todayAtt.filter(a => a.status === 'absent').length;
+            if (todayAbsent >= 3) {
+                notifications.push({
+                    icon: '🔴',
+                    title: translate('high_absence_today') || 'High Absence Today',
+                    text: `${todayAbsent} ${translate('students_absent') || 'students are absent today'}`,
+                    action: "showPage('attendance')"
+                });
+            }
+
+            // Update badge
+            const badge = document.getElementById('notifBadge');
+            if (badge) {
+                if (notifications.length > 0) {
+                    badge.style.display = 'inline-flex';
+                    badge.textContent = notifications.length;
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        }
+
+        function toggleNotifications() {
+            const panel = document.getElementById('notifPanel');
+            if (!panel) return;
+            const isVisible = panel.style.display !== 'none';
+            if (isVisible) {
+                panel.style.display = 'none';
+            } else {
+                generateSmartNotifications();
+                renderNotifications();
+                panel.style.display = 'block';
+            }
+        }
+
+        function renderNotifications() {
+            const listEl = document.getElementById('notifList');
+            if (!listEl) return;
+
+            if (notifications.length === 0) {
+                listEl.innerHTML = `<div class="notif-empty">${translate('no_notifications') || 'No new notifications'}</div>`;
+                return;
+            }
+
+            listEl.innerHTML = notifications.map(n => `
+                <div class="notif-item" onclick="${n.action || ''};document.getElementById('notifPanel').style.display='none';">
+                    <div class="notif-item-icon">${n.icon}</div>
+                    <div class="notif-item-content">
+                        <div class="notif-item-title">${n.title}</div>
+                        <div class="notif-item-text">${n.text}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function clearNotifications() {
+            notifications = [];
+            const badge = document.getElementById('notifBadge');
+            if (badge) badge.style.display = 'none';
+            renderNotifications();
+        }
+
+        // Close notification panel when clicking outside
+        document.addEventListener('click', function(e) {
+            const panel = document.getElementById('notifPanel');
+            const bell = document.getElementById('notifBellBtn');
+            if (panel && bell && !panel.contains(e.target) && !bell.contains(e.target)) {
+                panel.style.display = 'none';
+            }
+        });
+
         // Page Management
         function showPage(pageName) {
             // Hide all pages
@@ -6569,6 +6771,9 @@
             
             // Apply saved dashboard layout
             applyDashboardLayout();
+
+            // Generate smart notifications
+            generateSmartNotifications();
 
             // Update stats
             document.getElementById('totalStudents').textContent = students.length;
