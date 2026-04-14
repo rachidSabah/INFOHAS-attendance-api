@@ -48,9 +48,9 @@ const EMU_PER_IN = 914400;
 
 // ── v3: Compensation factors ──
 const COMPENSATION = {
-  HEADING_WIDTH: 0.22, SINGLE_LINE_NARROW: 0.14, SINGLE_LINE_NORMAL: 0.08,
+  HEADING_WIDTH: 0.25, SINGLE_LINE_NARROW: 0.18, SINGLE_LINE_NORMAL: 0.10,
   MULTI_LINE: 0.05, SHORT_TEXT_EXTRA: 0.12, NUMERIC_TEXT_EXTRA: 0.08,
-  NOWRAP_EXTRA: 0.15, MAX_WIDTH_FACTOR: 0.20,
+  NOWRAP_EXTRA: 0.15, MAX_WIDTH_FACTOR: 0.40,
   TEXT_HEIGHT: 0.08, LIST_HEIGHT: 0.06,
   MIN_FONT_SIZE_PT: 11, MAX_CHARS_CJK: 350, MAX_CHARS_LATIN: 550,
   VERTICAL_BALANCE_THRESHOLD: 0.55, OVERLAP_TOLERANCE_IN: 0.05, BOUNDS_TOLERANCE_IN: 0.02,
@@ -148,7 +148,7 @@ function calculateWidthCompensation(el, slideWidthIn) {
   if (/^[\d\s\.\,\-\/\+\%\$\#\@\!\?\:\;\(\)\[\]]+$/.test(txt)) f += COMPENSATION.NUMERIC_TEXT_EXTRA;
   if (el.noWrap) f += COMPENSATION.NOWRAP_EXTRA;
   // v4: Auto-detect short text that should not wrap even without explicit nowrap
-  if (!el.noWrap && single && txt.length > 0 && txt.length < COMPENSATION.AUTO_SHORT_TEXT_THRESHOLD) {
+  if (!el.noWrap && single && txt.length >= 10 && txt.length < COMPENSATION.AUTO_SHORT_TEXT_THRESHOLD) {
     f += COMPENSATION.SHORT_TEXT_EXTRA * 0.5; // Half bonus for auto-detected short text
   }
   // v4: Auto-detect card titles (>=18pt, single line, <20 chars) — treat like heading
@@ -424,7 +424,7 @@ function addElements(slideData, targetSlide, pres, tmpDir) {
       if (el.style.margin) textOptions.margin = el.style.margin;
       if (el.style.rotate !== undefined) textOptions.rotate = el.style.rotate;
       if (el.style.transparency !== null && el.style.transparency !== undefined) textOptions.transparency = el.style.transparency;
-      if (el.noWrap) textOptions.shrinkText = true;
+      if (el.noWrap) textOptions.wrap = false;
 
       targetSlide.addText(el.text, textOptions);
     }
@@ -522,7 +522,14 @@ async function extractSlideData(page) {
           if (isCJKFont && !hasCJKChars(textContent)) return _fc.latin || 'Century Gothic';
           return font;
         }
-        if (FONT_FALLBACK_MAP[lower]) return FONT_FALLBACK_MAP[lower];
+        if (FONT_FALLBACK_MAP[lower]) {
+          const mapped = FONT_FALLBACK_MAP[lower];
+          const mappedIsCJK = CJK_FONT_FRAGMENTS.some(f => mapped.toLowerCase().includes(f));
+          // If the mapped font is a non-CJK font but the text has CJK chars, keep looking
+          // (e.g. font-family:'Inter','Microsoft YaHei' with Chinese text should use YaHei, not Century Gothic)
+          if (!mappedIsCJK && hasCJKChars(textContent)) continue;
+          return mapped;
+        }
         if (['sans-serif', 'serif', 'monospace', 'cursive', 'fantasy'].includes(lower)) continue;
         if (isCJKFont || hasCJKChars(textContent)) return _fc.cjk || 'Microsoft YaHei';
         return font; // unknown non-CJK font: pass through
@@ -1077,8 +1084,9 @@ async function extractSlideData(page) {
             fontFace: mapFontFace(computed.fontFamily, el.textContent),
             color: rgbToHex(computed.color),
             transparency: extractAlpha(computed.color),
-            align: computed.textAlign === 'start' ? 'left' : computed.textAlign,
+            align: computed.textAlign === 'start' ? 'left' : computed.textAlign === 'end' ? 'right' : computed.textAlign,
             lineSpacing: computed.lineHeight && computed.lineHeight !== 'normal' ? pxToPoints(computed.lineHeight) : null,
+            charSpacing: computed.letterSpacing && computed.letterSpacing !== 'normal' ? pxToPoints(computed.letterSpacing) : undefined,
             paraSpaceBefore: 0,
             paraSpaceAfter: pxToPoints(computed.marginBottom),
             // PptxGenJS margin array is [left, right, bottom, top]
@@ -1131,9 +1139,9 @@ async function extractSlideData(page) {
         fontSize: pxToPoints(computed.fontSize),
         fontFace: mapFontFace(computed.fontFamily, text),
         color: rgbToHex(computed.color),
-        align: computed.textAlign === 'start' ? 'left' : computed.textAlign,
+        align: computed.textAlign === 'start' ? 'left' : computed.textAlign === 'end' ? 'right' : computed.textAlign,
         charSpacing: computed.letterSpacing && computed.letterSpacing !== 'normal' ? pxToPoints(computed.letterSpacing) : undefined,
-        lineSpacing: pxToPoints(computed.lineHeight),
+        lineSpacing: computed.lineHeight && computed.lineHeight !== 'normal' ? pxToPoints(computed.lineHeight) : null,
         paraSpaceBefore: pxToPoints(computed.marginTop),
         paraSpaceAfter: pxToPoints(computed.marginBottom),
         // PptxGenJS margin array is [left, right, bottom, top] (not [top, right, bottom, left] as documented)
