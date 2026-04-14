@@ -2903,6 +2903,46 @@
         .notif-item-text { font-size: 0.78rem; color: var(--text-light); line-height: 1.4; }
         .notif-empty { padding: 30px; text-align: center; color: var(--text-light); font-size: 0.88rem; }
 
+        /* Global Search */
+        .global-search-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1100;
+            display: flex; justify-content: center;
+            padding-top: 12vh;
+        }
+        .global-search-box {
+            width: 560px; max-width: 90vw;
+            background: rgba(255,255,255,0.98);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            animation: searchSlideIn 0.2s ease;
+            max-height: 70vh;
+        }
+        @keyframes searchSlideIn {
+            from { opacity: 0; transform: translateY(-16px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .dark-mode .global-search-box { background: rgba(30,41,59,0.98); }
+        .global-search-results .search-group-title {
+            font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.06em; color: var(--text-light);
+            padding: 10px 20px 4px; background: var(--secondary);
+        }
+        .global-search-results .search-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 20px; cursor: pointer; transition: background 0.15s;
+        }
+        .global-search-results .search-item:hover { background: rgba(99,102,241,0.08); }
+        .search-item-icon { font-size: 1.1rem; flex-shrink: 0; }
+        .search-item-info { flex: 1; min-width: 0; }
+        .search-item-name { font-size: 0.9rem; font-weight: 600; color: var(--text); }
+        .search-item-detail { font-size: 0.75rem; color: var(--text-light); }
+
         /* Custom Confirm Dialog */
         .confirm-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px);
@@ -3434,6 +3474,7 @@
                             </div>
                         </div>
                     </div>
+                    <button class="btn btn-secondary btn-sm" onclick="openGlobalSearch()" title="Search (Ctrl+K)">🔍</button>
                     <button class="btn btn-primary btn-sm" onclick="showExportModal()">📄 <span data-translate="export">Export</span></button>
                 </div>
             </header>
@@ -4542,6 +4583,20 @@
 
     <div id="modalsContainer"></div>
 
+    <!-- Global Search Overlay -->
+    <div id="globalSearchOverlay" class="global-search-overlay" style="display:none;" onclick="if(event.target===this)closeGlobalSearch()">
+        <div class="global-search-box">
+            <div style="display:flex;align-items:center;gap:10px;padding:16px 20px;border-bottom:1px solid var(--border);">
+                <span style="font-size:1.2rem;">🔍</span>
+                <input type="text" id="globalSearchInput" class="form-input" style="border:none;box-shadow:none;font-size:1rem;padding:8px 0;" placeholder="Search students, classes, tasks..." oninput="performGlobalSearch(this.value)" autofocus>
+                <kbd style="font-size:0.7rem;padding:2px 8px;border-radius:4px;background:var(--secondary);border:1px solid var(--border);color:var(--text-light);">ESC</kbd>
+            </div>
+            <div id="globalSearchResults" class="global-search-results" style="max-height:350px;overflow-y:auto;">
+                <div style="padding:30px;text-align:center;color:var(--text-light);font-size:0.9rem;" data-translate="type_to_search">Type to search across students, classes, and tasks...</div>
+            </div>
+        </div>
+    </div>
+
     <!-- Dashboard Customizer Modal -->
     <div id="dashboardCustomizerModal" class="modal">
         <div class="modal-content" style="max-width:500px;">
@@ -5362,6 +5417,10 @@
                 tasks_overdue: 'task(s) are past their due date',
                 high_absence_today: 'High Absence Today',
                 students_absent: 'students are absent today',
+
+                // Global Search
+                type_to_search: 'Type to search across students, classes, and tasks...',
+                no_results_found: 'No results found for',
                 incidents: 'Incidents',
 
                 // Confirm & Undo
@@ -5829,6 +5888,10 @@
                 tasks_overdue: 'tâche(s) ont dépassé leur date limite',
                 high_absence_today: 'Forte absence aujourd\'hui',
                 students_absent: 'étudiants sont absents aujourd\'hui',
+
+                // Recherche globale
+                type_to_search: 'Tapez pour rechercher parmi les étudiants, classes et tâches...',
+                no_results_found: 'Aucun résultat pour',
                 incidents: 'Incidents',
 
                 // Confirmation et annulation
@@ -6701,6 +6764,134 @@
             const bell = document.getElementById('notifBellBtn');
             if (panel && bell && !panel.contains(e.target) && !bell.contains(e.target)) {
                 panel.style.display = 'none';
+            }
+        });
+
+        // ===== Global Search =====
+        function openGlobalSearch() {
+            const overlay = document.getElementById('globalSearchOverlay');
+            if (overlay) {
+                overlay.style.display = 'flex';
+                setTimeout(() => {
+                    const input = document.getElementById('globalSearchInput');
+                    if (input) { input.value = ''; input.focus(); }
+                }, 100);
+            }
+        }
+
+        function closeGlobalSearch() {
+            const overlay = document.getElementById('globalSearchOverlay');
+            if (overlay) overlay.style.display = 'none';
+        }
+
+        function performGlobalSearch(query) {
+            const resultsEl = document.getElementById('globalSearchResults');
+            if (!resultsEl) return;
+
+            if (!query || query.length < 2) {
+                resultsEl.innerHTML = `<div style="padding:30px;text-align:center;color:var(--text-light);font-size:0.9rem;">${translate('type_to_search') || 'Type to search across students, classes, and tasks...'}</div>`;
+                return;
+            }
+
+            const q = query.toLowerCase();
+            const students = loadFromStorage(STORAGE_KEYS.STUDENTS) || [];
+            const classes = loadFromStorage(STORAGE_KEYS.CLASSES) || [];
+            const tasks = loadFromStorage(STORAGE_KEYS.TASKS) || [];
+            const teachers = loadFromStorage(STORAGE_KEYS.TEACHERS) || [];
+
+            let html = '';
+
+            // Search students
+            const matchedStudents = students.filter(s =>
+                s.fullName?.toLowerCase().includes(q) ||
+                s.studentId?.toLowerCase().includes(q) ||
+                s.guardianName?.toLowerCase().includes(q)
+            ).slice(0, 5);
+            if (matchedStudents.length > 0) {
+                html += `<div class="search-group-title">${translate('students') || 'Students'}</div>`;
+                matchedStudents.forEach(s => {
+                    const cls = classes.find(c => c.id === s.classId);
+                    html += `<div class="search-item" onclick="closeGlobalSearch();showStudentProfile('${s.id}')">
+                        <div class="search-item-icon">👤</div>
+                        <div class="search-item-info">
+                            <div class="search-item-name">${s.fullName}</div>
+                            <div class="search-item-detail">${s.studentId} • ${cls ? cls.name : '-'}</div>
+                        </div>
+                    </div>`;
+                });
+            }
+
+            // Search classes
+            const matchedClasses = classes.filter(c =>
+                c.name?.toLowerCase().includes(q) ||
+                c.teacher?.toLowerCase().includes(q)
+            ).slice(0, 5);
+            if (matchedClasses.length > 0) {
+                html += `<div class="search-group-title">${translate('classes') || 'Classes'}</div>`;
+                matchedClasses.forEach(c => {
+                    const count = students.filter(s => s.classId === c.id).length;
+                    html += `<div class="search-item" onclick="closeGlobalSearch();showPage('classes')">
+                        <div class="search-item-icon">🏫</div>
+                        <div class="search-item-info">
+                            <div class="search-item-name">${c.name}</div>
+                            <div class="search-item-detail">${count} ${translate('students') || 'students'} • ${c.teacher || '-'}</div>
+                        </div>
+                    </div>`;
+                });
+            }
+
+            // Search tasks
+            const matchedTasks = tasks.filter(t =>
+                t.title?.toLowerCase().includes(q) ||
+                t.description?.toLowerCase().includes(q)
+            ).slice(0, 5);
+            if (matchedTasks.length > 0) {
+                html += `<div class="search-group-title">${translate('tasks') || 'Tasks'}</div>`;
+                matchedTasks.forEach(t => {
+                    const statusIcon = { pending: '🟡', in_progress: '🔵', completed: '🟢', overdue: '🔴' };
+                    html += `<div class="search-item" onclick="closeGlobalSearch();showPage('tasks')">
+                        <div class="search-item-icon">${statusIcon[t.status] || '📝'}</div>
+                        <div class="search-item-info">
+                            <div class="search-item-name">${t.title}</div>
+                            <div class="search-item-detail">${translate(t.status) || t.status} • ${t.dueDate || '-'}</div>
+                        </div>
+                    </div>`;
+                });
+            }
+
+            // Search teachers
+            const matchedTeachers = teachers.filter(t =>
+                t.name?.toLowerCase().includes(q) ||
+                t.subject?.toLowerCase().includes(q)
+            ).slice(0, 5);
+            if (matchedTeachers.length > 0) {
+                html += `<div class="search-group-title">${translate('teachers') || 'Teachers'}</div>`;
+                matchedTeachers.forEach(t => {
+                    html += `<div class="search-item" onclick="closeGlobalSearch();showPage('settings')">
+                        <div class="search-item-icon">👨‍🏫</div>
+                        <div class="search-item-info">
+                            <div class="search-item-name">${t.name}</div>
+                            <div class="search-item-detail">${t.subject || '-'}</div>
+                        </div>
+                    </div>`;
+                });
+            }
+
+            if (!html) {
+                html = `<div style="padding:30px;text-align:center;color:var(--text-light);font-size:0.9rem;">${translate('no_results_found') || 'No results found for'} "${query}"</div>`;
+            }
+
+            resultsEl.innerHTML = html;
+        }
+
+        // Keyboard shortcut for global search (Ctrl+K)
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                openGlobalSearch();
+            }
+            if (e.key === 'Escape') {
+                closeGlobalSearch();
             }
         });
 
