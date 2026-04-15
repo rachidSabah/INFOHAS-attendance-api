@@ -5074,6 +5074,32 @@
             }
         }
 
+        // Immediate single-item sync to API (called right after create/update/delete)
+        async function syncItemToApi(type, item, action = 'create') {
+            if (!apiToken) return;
+            const endpoints = {
+                student: '/students',
+                class: '/classes',
+                module: '/modules',
+                attendance: '/attendance',
+                task: '/tasks',
+                incident: '/incidents'
+            };
+            const endpoint = endpoints[type];
+            if (!endpoint) return;
+
+            try {
+                if (action === 'create' || action === 'update') {
+                    await apiPost(endpoint, item);
+                } else if (action === 'delete' && item.id) {
+                    await apiDelete(endpoint + '/' + item.id);
+                }
+                console.log(`Synced ${type} (${action}) to database`);
+            } catch (e) {
+                console.warn(`Failed to sync ${type} to database:`, e.message);
+            }
+        }
+
         // Sync local data to API database
         async function syncToDatabase() {
             try {
@@ -5185,49 +5211,139 @@
             }
         }
 
-        // Load data from API into localStorage cache
+        // Smart merge: combine local and API data, preferring the more complete dataset
+        function smartMergeData(localData, apiData, idField = 'id') {
+            if (!Array.isArray(apiData) || apiData.length === 0) {
+                // API returned empty - keep local data, don't wipe it
+                return localData || [];
+            }
+            if (!Array.isArray(localData) || localData.length === 0) {
+                // No local data - use API data
+                return apiData;
+            }
+            // Both have data - merge by ID, preferring API data but keeping local-only items
+            const apiIds = new Set(apiData.map(item => item[idField]));
+            const localOnly = localData.filter(item => !apiIds.has(item[idField]));
+            // API data takes precedence for matching IDs (it's the source of truth)
+            return [...apiData, ...localOnly];
+        }
+
+        // Load data from API into localStorage cache - SMART MERGE (never wipes local data)
         async function loadFromDatabase() {
             try {
-                // Load students
+                let localDataPushed = false; // Track if we pushed local data to API
+
+                // Load students - smart merge
                 const studentsRes = await apiGet('/students');
                 if (studentsRes && studentsRes.success) {
-                    localStorage.setItem('attendance_students', JSON.stringify(studentsRes.data));
+                    const localStudents = loadFromStorage(STORAGE_KEYS.STUDENTS) || [];
+                    const merged = smartMergeData(localStudents, studentsRes.data);
+                    localStorage.setItem('attendance_students', JSON.stringify(merged));
+                    // If API was empty but we have local data, push local data to API
+                    if (localStudents.length > 0 && (!studentsRes.data || studentsRes.data.length === 0)) {
+                        console.log('Pushing local students to database...');
+                        for (const s of localStudents) {
+                            await apiPost('/students', {
+                                id: s.id, first_name: s.firstName || s.first_name || '',
+                                last_name: s.lastName || s.last_name || '',
+                                email: s.email || '', phone: s.phone || '',
+                                class: s.class || s.className || '',
+                                group_name: s.group || s.group_name || '',
+                                academic_year: s.academicYear || s.academic_year || '',
+                                status: s.status || 'active', photo: s.photo || '',
+                                enrollment_date: s.enrollmentDate || s.enrollment_date || '',
+                                notes: s.notes || ''
+                            }).catch(e => console.warn('Student sync failed:', e));
+                        }
+                        localDataPushed = true;
+                    }
                 }
 
-                // Load classes
+                // Load classes - smart merge
                 const classesRes = await apiGet('/classes');
                 if (classesRes && classesRes.success) {
-                    localStorage.setItem('attendance_classes', JSON.stringify(classesRes.data));
+                    const localClasses = loadFromStorage(STORAGE_KEYS.CLASSES) || [];
+                    const merged = smartMergeData(localClasses, classesRes.data);
+                    localStorage.setItem('attendance_classes', JSON.stringify(merged));
+                    if (localClasses.length > 0 && (!classesRes.data || classesRes.data.length === 0)) {
+                        console.log('Pushing local classes to database...');
+                        for (const c of localClasses) {
+                            await apiPost('/classes', {
+                                id: c.id, name: c.name || c.className || '',
+                                level: c.level || '', department: c.department || '',
+                                academic_year: c.academicYear || c.academic_year || '',
+                                capacity: c.capacity || 30,
+                                teacher_id: c.teacherId || c.teacher_id || ''
+                            }).catch(e => console.warn('Class sync failed:', e));
+                        }
+                        localDataPushed = true;
+                    }
                 }
 
-                // Load attendance
+                // Load attendance - smart merge
                 const attendanceRes = await apiGet('/attendance');
                 if (attendanceRes && attendanceRes.success) {
-                    localStorage.setItem('attendance_records', JSON.stringify(attendanceRes.data));
+                    const localAttendance = loadFromStorage(STORAGE_KEYS.ATTENDANCE) || [];
+                    const merged = smartMergeData(localAttendance, attendanceRes.data);
+                    localStorage.setItem('attendance_records', JSON.stringify(merged));
+                    if (localAttendance.length > 0 && (!attendanceRes.data || attendanceRes.data.length === 0)) {
+                        console.log('Pushing local attendance to database...');
+                        for (const a of localAttendance) {
+                            await apiPost('/attendance', {
+                                id: a.id, student_id: a.studentId || a.student_id || '',
+                                date: a.date || '', status: a.status || '',
+                                class: a.class || a.className || '',
+                                module: a.module || '', notes: a.notes || '',
+                                marked_by: a.markedBy || a.marked_by || ''
+                            }).catch(e => console.warn('Attendance sync failed:', e));
+                        }
+                        localDataPushed = true;
+                    }
                 }
 
-                // Load users
+                // Load users - smart merge
                 const usersRes = await apiGet('/users');
                 if (usersRes && usersRes.success) {
-                    localStorage.setItem('attendance_users', JSON.stringify(usersRes.data));
+                    const localUsers = loadFromStorage(STORAGE_KEYS.USERS) || [];
+                    const merged = smartMergeData(localUsers, usersRes.data);
+                    localStorage.setItem('attendance_users', JSON.stringify(merged));
                 }
 
-                // Load modules
+                // Load modules - smart merge
                 const modulesRes = await apiGet('/modules');
                 if (modulesRes && modulesRes.success) {
-                    localStorage.setItem('attendance_modules', JSON.stringify(modulesRes.data));
+                    const localModules = loadFromStorage(STORAGE_KEYS.MODULES) || [];
+                    const merged = smartMergeData(localModules, modulesRes.data);
+                    localStorage.setItem('attendance_modules', JSON.stringify(merged));
                 }
 
-                // Load tasks
+                // Load tasks - smart merge
                 const tasksRes = await apiGet('/tasks');
                 if (tasksRes && tasksRes.success) {
-                    localStorage.setItem('attendance_tasks', JSON.stringify(tasksRes.data));
+                    const localTasks = loadFromStorage(STORAGE_KEYS.TASKS) || [];
+                    const merged = smartMergeData(localTasks, tasksRes.data);
+                    localStorage.setItem('attendance_tasks', JSON.stringify(merged));
+                    if (localTasks.length > 0 && (!tasksRes.data || tasksRes.data.length === 0)) {
+                        console.log('Pushing local tasks to database...');
+                        for (const t of localTasks) {
+                            await apiPost('/tasks', {
+                                id: t.id, title: t.title || '', description: t.description || '',
+                                assigned_to: t.assignedTo || t.assigned_to || '',
+                                assigned_by: t.assignedBy || t.assigned_by || '',
+                                priority: t.priority || 'medium', status: t.status || 'pending',
+                                category: t.category || '', due_date: t.dueDate || t.due_date || ''
+                            }).catch(e => console.warn('Task sync failed:', e));
+                        }
+                        localDataPushed = true;
+                    }
                 }
 
-                // Load incidents
+                // Load incidents - smart merge
                 const incidentsRes = await apiGet('/incidents');
                 if (incidentsRes && incidentsRes.success) {
-                    localStorage.setItem('attendance_incidents', JSON.stringify(incidentsRes.data));
+                    const localIncidents = loadFromStorage(STORAGE_KEYS.INCIDENTS) || [];
+                    const merged = smartMergeData(localIncidents, incidentsRes.data);
+                    localStorage.setItem('attendance_incidents', JSON.stringify(merged));
                 }
 
                 // Load settings
@@ -5236,7 +5352,10 @@
                     localStorage.setItem('attendance_settings', JSON.stringify(settingsRes.data));
                 }
 
-                console.log('Database load complete!');
+                if (localDataPushed) {
+                    console.log('Local data pushed to database successfully!');
+                }
+                console.log('Database load complete (smart merge)!');
                 return true;
             } catch (e) {
                 console.error('Database load failed:', e);
@@ -6712,19 +6831,66 @@
             }
         }
 
-        // Background sync to API when saving locally
+        // Background sync to API when saving locally - ACTUALLY SYNCs individual items
         function syncSaveToApi(key, data) {
             if (!apiToken) return; // Not logged in via API, skip sync
             try {
                 const mapping = {
-                    'attendance_students': { endpoint: '/students', type: 'students' },
-                    'attendance_classes': { endpoint: '/classes', type: 'classes' },
-                    'attendance_modules': { endpoint: '/modules', type: 'modules' },
-                    'attendance_attendance': { endpoint: '/attendance', type: 'attendance' },
-                    'attendance_tasks': { endpoint: '/tasks', type: 'tasks' },
-                    'attendance_incidents': { endpoint: '/incidents', type: 'incidents' },
+                    'attendance_students': { endpoint: '/students', type: 'students', fields: s => ({
+                        id: s.id, first_name: s.firstName || s.first_name || '',
+                        last_name: s.lastName || s.last_name || '',
+                        email: s.email || '', phone: s.phone || '',
+                        class: s.class || s.className || '',
+                        group_name: s.group || s.group_name || '',
+                        academic_year: s.academicYear || s.academic_year || '',
+                        status: s.status || 'active', photo: s.photo || '',
+                        enrollment_date: s.enrollmentDate || s.enrollment_date || '',
+                        notes: s.notes || ''
+                    })},
+                    'attendance_classes': { endpoint: '/classes', type: 'classes', fields: c => ({
+                        id: c.id, name: c.name || c.className || '',
+                        level: c.level || '', department: c.department || '',
+                        academic_year: c.academicYear || c.academic_year || '',
+                        capacity: c.capacity || 30,
+                        teacher_id: c.teacherId || c.teacher_id || ''
+                    })},
+                    'attendance_modules': { endpoint: '/modules', type: 'modules', fields: m => ({
+                        id: m.id, name: m.name || '', code: m.code || '',
+                        class_id: m.classId || m.class_id || '',
+                        teacher_id: m.teacherId || m.teacher_id || '',
+                        schedule: m.schedule || '', hours: m.hours || 0,
+                        description: m.description || ''
+                    })},
+                    'attendance_records': { endpoint: '/attendance', type: 'attendance', fields: a => ({
+                        id: a.id, student_id: a.studentId || a.student_id || '',
+                        date: a.date || '', status: a.status || '',
+                        class: a.class || a.className || '',
+                        module: a.module || '', notes: a.notes || '',
+                        marked_by: a.markedBy || a.marked_by || ''
+                    })},
+                    'attendance_tasks': { endpoint: '/tasks', type: 'tasks', fields: t => ({
+                        id: t.id, title: t.title || '', description: t.description || '',
+                        assigned_to: t.assignedTo || t.assigned_to || '',
+                        assigned_by: t.assignedBy || t.assigned_by || '',
+                        priority: t.priority || 'medium', status: t.status || 'pending',
+                        category: t.category || '', due_date: t.dueDate || t.due_date || ''
+                    })},
+                    'attendance_incidents': { endpoint: '/incidents', type: 'incidents', fields: inc => ({
+                        id: inc.id, student_id: inc.studentId || inc.student_id || '',
+                        type: inc.type || '', severity: inc.severity || 'medium',
+                        description: inc.description || '',
+                        action_taken: inc.actionTaken || inc.action_taken || '',
+                        status: inc.status || 'open',
+                        incident_date: inc.incidentDate || inc.incident_date || '',
+                        location: inc.location || '', witnesses: inc.witnesses || ''
+                    })},
                     'attendance_settings': { endpoint: '/settings', type: 'settings' },
-                    'attendance_users': { endpoint: '/users', type: 'users' }
+                    'attendance_users': { endpoint: '/users', type: 'users', fields: u => ({
+                        username: u.username, password: u.password || 'employee123',
+                        role: u.role || 'employee', full_name: u.fullName || u.full_name || '',
+                        email: u.email || '', phone: u.phone || '',
+                        department: u.department || ''
+                    })}
                 };
 
                 const config = mapping[key];
@@ -6736,13 +6902,19 @@
                     return;
                 }
 
-                // For arrays of data, we sync the whole collection using import
-                // This is a simplified approach - in production you'd do delta syncs
-                if (Array.isArray(data)) {
-                    const payload = {};
-                    payload[config.type] = data;
-                    // We don't bulk import on every save to avoid overwhelming the API
-                    // Instead, individual items are synced when they're created/updated
+                // For arrays of data, sync each item individually via POST
+                if (Array.isArray(data) && config.fields) {
+                    // Debounced full sync - only sync the most recent additions
+                    clearTimeout(window._syncSaveTimer);
+                    window._syncSaveTimer = setTimeout(async () => {
+                        console.log(`Auto-syncing ${data.length} ${config.type} to database...`);
+                        for (const item of data) {
+                            if (item.id) {
+                                await apiPost(config.endpoint, config.fields(item))
+                                    .catch(e => console.warn(`${config.type} sync failed:`, e));
+                            }
+                        }
+                    }, 2000); // 2-second debounce to avoid overwhelming the API on rapid saves
                 }
             } catch (e) {
                 console.warn('Background sync failed:', e);
@@ -8314,6 +8486,16 @@
             // Refresh student-related dropdowns
             populateStudentDropdowns();
             
+            // Sync to D1 database immediately
+            syncItemToApi('student', {
+                id: student.id, first_name: student.fullName || '',
+                last_name: '', email: student.email || '', phone: student.guardianPhone || '',
+                class: student.classId || '', group_name: '',
+                academic_year: student.academicYear || '',
+                status: student.status || 'active', photo: student.photo || '',
+                enrollment_date: student.createdAt || '', notes: student.notes || ''
+            }, editingId ? 'update' : 'create');
+            
             showToast(editingId ? 'Student updated successfully' : 'Student added successfully');
         }
 
@@ -8369,6 +8551,8 @@
             // Delete
             saveToStorage(STORAGE_KEYS.STUDENTS, students.filter(s => s.id !== id));
             saveToStorage(STORAGE_KEYS.ATTENDANCE, attendance.filter(a => a.studentId !== id));
+            // Sync delete to D1 database
+            syncItemToApi('student', { id }, 'delete');
             showToast(translate('student_deleted') || 'Student deleted');
             loadStudents();
 
@@ -9222,6 +9406,14 @@
             // Refresh all dropdowns to show new data immediately
             populateClassDropdowns();
             
+            // Sync to D1 database immediately
+            syncItemToApi('class', {
+                id: cls.id, name: cls.name || '',
+                level: '', department: cls.description || '',
+                academic_year: '', capacity: 30,
+                teacher_id: cls.teacher || ''
+            }, editingId ? 'update' : 'create');
+            
             showToast(editingId ? 'Class updated successfully' : 'Class added successfully');
         }
 
@@ -9265,6 +9457,8 @@
             saveToStorage(STORAGE_KEYS.CLASSES, classes.filter(c => c.id !== id));
             const updatedStudents = students.map(s => s.classId === id ? { ...s, classId: '' } : s);
             saveToStorage(STORAGE_KEYS.STUDENTS, updatedStudents);
+            // Sync delete to D1 database
+            syncItemToApi('class', { id }, 'delete');
             showToast(translate('class_deleted') || 'Class deleted');
             loadClasses();
 
@@ -9455,6 +9649,13 @@
             
             filteredAttendance.push(record);
             saveToStorage(STORAGE_KEYS.ATTENDANCE, filteredAttendance);
+            
+            // Sync attendance record to D1 database immediately
+            syncItemToApi('attendance', {
+                id: record.id, student_id: record.studentId,
+                date: record.date, status: record.status,
+                class: '', module: '', notes: '', marked_by: ''
+            }, 'create');
             
             // Auto-send WhatsApp message for absent and late students
             if (status === 'absent') {
@@ -14060,6 +14261,13 @@
             saveToStorage(STORAGE_KEYS.TASKS, tasks);
             closeModal('addTaskModal');
             loadTasks();
+            // Sync task to D1 database immediately
+            syncItemToApi('task', {
+                id: task.id, title: task.title || '', description: task.description || '',
+                assigned_to: task.assignedTo || '', assigned_by: task.assignedBy || '',
+                priority: task.priority || 'medium', status: task.status || 'pending',
+                category: task.category || '', due_date: task.dueDate || ''
+            }, 'create');
             showToast(translate('add_task') + ' - ' + ticketNum);
         }
 
@@ -14535,6 +14743,16 @@
             saveToStorage(STORAGE_KEYS.INCIDENTS, incidents);
             closeModal('addIncidentModal');
             loadIncidents();
+            // Sync incident to D1 database immediately
+            syncItemToApi('incident', {
+                id: incident.id, student_id: incident.studentId || '',
+                type: incident.incidentType || '', severity: incident.severity || 'medium',
+                description: incident.description || '',
+                action_taken: incident.actionTaken || '',
+                status: incident.status || 'open',
+                incident_date: incident.date || '',
+                location: '', witnesses: ''
+            }, 'create');
             showToast(translate('report_incident') || 'Incident reported');
         }
 
