@@ -1,0 +1,8 @@
+name = "infohas-attendance-api"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "infohas-attendance-db"
+database_id = "0ef34187-3bae-482c-9769-4db7220b2165"
