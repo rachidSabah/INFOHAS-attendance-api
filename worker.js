@@ -151,7 +151,7 @@ export default {
         for (const [k, v] of Object.entries(body)) {
           if (['full_name', 'email', 'phone', 'photo', 'department', 'is_active', 'role', 'password'].includes(k)) {
             sets.push(`${k} = ?`);
-            vals.push(v);
+            vals.push(v === undefined ? null : v);
           }
         }
         if (sets.length === 0) return errorResponse('No valid fields to update');
@@ -181,16 +181,31 @@ export default {
         const id = body.id || generateId();
         // Use provided student_id or generate one
         const studentId = body.student_id || body.studentId || id.substring(0, 8).toUpperCase();
-        // Try to add guardian columns - if they don't exist yet, the query will still work with the base columns
+        // Ensure all values are null-safe (D1 doesn't accept undefined)
+        const firstName = body.first_name || null;
+        const lastName = body.last_name || null;
+        const email = body.email || null;
+        const phone = body.phone || null;
+        const className = body.class || null;
+        const groupName = body.group_name || null;
+        const academicYear = body.academic_year || null;
+        const status = body.status || 'active';
+        const photo = body.photo || null;
+        const enrollmentDate = body.enrollment_date || null;
+        const notes = body.notes || null;
+        const guardianName = body.guardian_name || null;
+        const guardianPhone = body.guardian_phone || body.phone || null;
+        const address = body.address || null;
+        // Try to add with guardian columns
         try {
           await env.DB.prepare(
             'INSERT INTO students (id, first_name, last_name, email, phone, class, group_name, academic_year, status, photo, enrollment_date, notes, guardian_name, guardian_phone, student_id, address) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-          ).bind(id, body.first_name, body.last_name, body.email || null, body.phone || null, body.class || null, body.group_name || null, body.academic_year || null, body.status || 'active', body.photo || null, body.enrollment_date || null, body.notes || null, body.guardian_name || null, body.guardian_phone || body.phone || null, studentId, body.address || null).run();
+          ).bind(id, firstName, lastName, email, phone, className, groupName, academicYear, status, photo, enrollmentDate, notes, guardianName, guardianPhone, studentId, address).run();
         } catch (e) {
           // Fallback if guardian columns don't exist yet
           await env.DB.prepare(
             'INSERT INTO students (id, first_name, last_name, email, phone, class, group_name, academic_year, status, photo, enrollment_date, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-          ).bind(id, body.first_name, body.last_name, body.email || null, body.phone || null, body.class || null, body.group_name || null, body.academic_year || null, body.status || 'active', body.photo || null, body.enrollment_date || null, body.notes || null).run();
+          ).bind(id, firstName, lastName, email, phone, className, groupName, academicYear, status, photo, enrollmentDate, notes).run();
         }
         return jsonResponse({ success: true, data: { id, ...body } }, 201);
       }
@@ -226,7 +241,7 @@ export default {
         for (const [k, v] of Object.entries(body)) {
           if (['first_name', 'last_name', 'email', 'phone', 'class', 'group_name', 'academic_year', 'status', 'photo', 'enrollment_date', 'notes', 'guardian_name', 'guardian_phone', 'student_id', 'address'].includes(k)) {
             sets.push(`${k} = ?`);
-            vals.push(v);
+            vals.push(v === undefined ? null : v);
           }
         }
         if (sets.length === 0) return errorResponse('No valid fields to update');
@@ -286,7 +301,7 @@ export default {
         for (const [k, v] of Object.entries(body)) {
           if (['student_id', 'date', 'status', 'class', 'module', 'notes'].includes(k)) {
             sets.push(`${k} = ?`);
-            vals.push(v);
+            vals.push(v === undefined ? null : v);
           }
         }
         if (sets.length === 0) return errorResponse('No valid fields to update');
@@ -324,7 +339,7 @@ export default {
         for (const [k, v] of Object.entries(body)) {
           if (['name', 'level', 'department', 'academic_year', 'capacity', 'schedule', 'teacher_id'].includes(k)) {
             sets.push(`${k} = ?`);
-            vals.push(v);
+            vals.push(v === undefined ? null : v);
           }
         }
         if (sets.length === 0) return errorResponse('No valid fields to update');
@@ -364,7 +379,7 @@ export default {
         for (const [k, v] of Object.entries(body)) {
           if (['name', 'code', 'class_id', 'teacher_id', 'schedule', 'hours', 'description'].includes(k)) {
             sets.push(`${k} = ?`);
-            vals.push(v);
+            vals.push(v === undefined ? null : v);
           }
         }
         if (sets.length === 0) return errorResponse('No valid fields to update');
@@ -411,7 +426,7 @@ export default {
         for (const [k, v] of Object.entries(body)) {
           if (['title', 'description', 'assigned_to', 'priority', 'status', 'category', 'due_date', 'completed_date', 'completion_report'].includes(k)) {
             sets.push(`${k} = ?`);
-            vals.push(v);
+            vals.push(v === undefined ? null : v);
           }
         }
         if (sets.length === 0) return errorResponse('No valid fields to update');
@@ -505,7 +520,7 @@ export default {
         for (const [k, v] of Object.entries(body)) {
           if (['type', 'severity', 'description', 'action_taken', 'status', 'incident_date', 'location', 'witnesses', 'follow_up_notes', 'resolution_date'].includes(k)) {
             sets.push(`${k} = ?`);
-            vals.push(v);
+            vals.push(v === undefined ? null : v);
           }
         }
         if (sets.length === 0) return errorResponse('No valid fields to update');
