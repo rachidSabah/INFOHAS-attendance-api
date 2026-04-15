@@ -22,6 +22,20 @@ function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
 }
 
+
+// Normalize null values to empty strings to prevent 'undefined' in frontend
+function nullToEmpty(obj) {
+  if (Array.isArray(obj)) return obj.map(nullToEmpty);
+  if (obj && typeof obj === 'object') {
+    const result = {};
+    for (const [k, v] of Object.entries(obj)) {
+      result[k] = v === null ? '' : v;
+    }
+    return result;
+  }
+  return obj;
+}
+
 // Simple auth check - in production you'd use JWT or similar
 async function authenticate(request, env) {
   const authHeader = request.headers.get('Authorization');
@@ -130,7 +144,7 @@ export default {
       // ==================== USERS ====================
       if (path === '/api/users' && method === 'GET') {
         const users = await env.DB.prepare('SELECT id, username, role, full_name, email, phone, photo, department, is_active, created_at, updated_at FROM users').all();
-        return jsonResponse({ success: true, data: users.results });
+        return jsonResponse({ success: true, data: nullToEmpty(users.results) });
       }
 
       if (path === '/api/users' && method === 'POST') {
@@ -171,8 +185,10 @@ export default {
       // ==================== STUDENTS ====================
       if (path === '/api/students' && method === 'GET') {
         const students = await env.DB.prepare('SELECT * FROM students ORDER BY created_at DESC').all();
-        // Filter out corrupted records (empty first_name)
-        const validStudents = students.results.filter(s => (s.first_name || '').trim() !== '');
+        // Filter out corrupted records (empty first_name) and normalize nulls to empty strings
+        const validStudents = students.results
+          .filter(s => (s.first_name || '').trim() !== '')
+          .map(nullToEmpty);
         return jsonResponse({ success: true, data: validStudents });
       }
 
@@ -255,6 +271,9 @@ export default {
       if (path.match(/^\/api\/students\/[^/]+$/) && method === 'DELETE') {
         if (session.role !== 'admin') return errorResponse('Forbidden', 403);
         const id = path.split('/').pop();
+        // Delete dependent records first to avoid foreign key constraint errors
+        try { await env.DB.prepare('DELETE FROM attendance WHERE student_id = ?').bind(id).run(); } catch(e) {}
+        try { await env.DB.prepare('DELETE FROM incidents WHERE student_id = ?').bind(id).run(); } catch(e) {}
         await env.DB.prepare('DELETE FROM students WHERE id = ?').bind(id).run();
         return jsonResponse({ success: true });
       }
@@ -269,7 +288,7 @@ export default {
         if (classFilter) { query += ' AND a.class = ?'; params.push(classFilter); }
         query += ' ORDER BY a.date DESC';
         const attendance = await env.DB.prepare(query).bind(...params).all();
-        return jsonResponse({ success: true, data: attendance.results });
+        return jsonResponse({ success: true, data: nullToEmpty(attendance.results) });
       }
 
       if (path === '/api/attendance' && method === 'POST') {
@@ -320,7 +339,7 @@ export default {
       // ==================== CLASSES ====================
       if (path === '/api/classes' && method === 'GET') {
         const classes = await env.DB.prepare('SELECT * FROM classes ORDER BY name').all();
-        return jsonResponse({ success: true, data: classes.results });
+        return jsonResponse({ success: true, data: nullToEmpty(classes.results) });
       }
 
       if (path === '/api/classes' && method === 'POST') {
@@ -360,7 +379,7 @@ export default {
       // ==================== MODULES ====================
       if (path === '/api/modules' && method === 'GET') {
         const modules = await env.DB.prepare('SELECT * FROM modules ORDER BY name').all();
-        return jsonResponse({ success: true, data: modules.results });
+        return jsonResponse({ success: true, data: nullToEmpty(modules.results) });
       }
 
       if (path === '/api/modules' && method === 'POST') {
@@ -407,7 +426,7 @@ export default {
         if (assignedTo) { query += ' AND t.assigned_to = ?'; params.push(assignedTo); }
         query += ' ORDER BY t.created_at DESC';
         const tasks = await env.DB.prepare(query).bind(...params).all();
-        return jsonResponse({ success: true, data: tasks.results });
+        return jsonResponse({ success: true, data: nullToEmpty(tasks.results) });
       }
 
       if (path === '/api/tasks' && method === 'POST') {
@@ -450,7 +469,7 @@ export default {
         const taskId = url.searchParams.get('task_id');
         if (!taskId) return errorResponse('task_id required');
         const files = await env.DB.prepare('SELECT id, task_id, filename, file_type, file_size, uploaded_by, created_at FROM task_files WHERE task_id = ?').bind(taskId).all();
-        return jsonResponse({ success: true, data: files.results });
+        return jsonResponse({ success: true, data: nullToEmpty(files.results) });
       }
 
       if (path === '/api/tasks/files' && method === 'POST') {
@@ -466,7 +485,7 @@ export default {
         const id = path.split('/').pop();
         const file = await env.DB.prepare('SELECT * FROM task_files WHERE id = ?').bind(id).first();
         if (!file) return errorResponse('File not found', 404);
-        return jsonResponse({ success: true, data: file });
+        return jsonResponse({ success: true, data: nullToEmpty(file) });
       }
 
       if (path.match(/^\/api\/tasks\/files\/[^/]+$/) && method === 'DELETE') {
@@ -480,7 +499,7 @@ export default {
         const taskId = url.searchParams.get('task_id');
         if (!taskId) return errorResponse('task_id required');
         const comments = await env.DB.prepare('SELECT tc.*, u.full_name as user_name FROM task_comments tc LEFT JOIN users u ON tc.user_id = u.id WHERE tc.task_id = ? ORDER BY tc.created_at').bind(taskId).all();
-        return jsonResponse({ success: true, data: comments.results });
+        return jsonResponse({ success: true, data: nullToEmpty(comments.results) });
       }
 
       if (path === '/api/tasks/comments' && method === 'POST') {
@@ -501,7 +520,7 @@ export default {
         if (studentId) { query += ' AND i.student_id = ?'; params.push(studentId); }
         query += ' ORDER BY i.created_at DESC';
         const incidents = await env.DB.prepare(query).bind(...params).all();
-        return jsonResponse({ success: true, data: incidents.results });
+        return jsonResponse({ success: true, data: nullToEmpty(incidents.results) });
       }
 
       if (path === '/api/incidents' && method === 'POST') {
@@ -543,7 +562,7 @@ export default {
         const incidentId = url.searchParams.get('incident_id');
         if (!incidentId) return errorResponse('incident_id required');
         const files = await env.DB.prepare('SELECT id, incident_id, filename, file_type, file_size, uploaded_by, created_at FROM incident_files WHERE incident_id = ?').bind(incidentId).all();
-        return jsonResponse({ success: true, data: files.results });
+        return jsonResponse({ success: true, data: nullToEmpty(files.results) });
       }
 
       if (path === '/api/incidents/files' && method === 'POST') {
@@ -559,7 +578,7 @@ export default {
         const id = path.split('/').pop();
         const file = await env.DB.prepare('SELECT * FROM incident_files WHERE id = ?').bind(id).first();
         if (!file) return errorResponse('File not found', 404);
-        return jsonResponse({ success: true, data: file });
+        return jsonResponse({ success: true, data: nullToEmpty(file) });
       }
 
       if (path.match(/^\/api\/incidents\/files\/[^/]+$/) && method === 'DELETE') {
@@ -627,14 +646,14 @@ export default {
         return jsonResponse({
           success: true,
           data: {
-            students: students.results,
-            attendance: attendance.results,
-            classes: classes.results,
-            modules: modules.results,
-            tasks: tasks.results,
-            incidents: incidents.results,
+            students: nullToEmpty(students.results),
+            attendance: nullToEmpty(attendance.results),
+            classes: nullToEmpty(classes.results),
+            modules: nullToEmpty(modules.results),
+            tasks: nullToEmpty(tasks.results),
+            incidents: nullToEmpty(incidents.results),
             settings: settings.results,
-            users: users.results,
+            users: nullToEmpty(users.results),
             exportedAt: new Date().toISOString()
           }
         });
@@ -728,7 +747,7 @@ export default {
       // ==================== CURRENT USER ====================
       if (path === '/api/me' && method === 'GET') {
         const user = await env.DB.prepare('SELECT id, username, role, full_name, email, phone, photo, department FROM users WHERE id = ?').bind(session.user_id).first();
-        return jsonResponse({ success: true, data: user });
+        return jsonResponse({ success: true, data: nullToEmpty(user) });
       }
 
       // 404 fallback
