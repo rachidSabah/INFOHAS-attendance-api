@@ -182,20 +182,21 @@ export default {
         // Use provided student_id or generate one
         const studentId = body.student_id || body.studentId || id.substring(0, 8).toUpperCase();
         // Ensure all values are null-safe (D1 doesn't accept undefined)
-        const firstName = body.first_name || null;
-        const lastName = body.last_name || null;
-        const email = body.email || null;
-        const phone = body.phone || null;
-        const className = body.class || null;
-        const groupName = body.group_name || null;
-        const academicYear = body.academic_year || null;
-        const status = body.status || 'active';
-        const photo = body.photo || null;
-        const enrollmentDate = body.enrollment_date || null;
-        const notes = body.notes || null;
-        const guardianName = body.guardian_name || null;
-        const guardianPhone = body.guardian_phone || body.phone || null;
-        const address = body.address || null;
+        // Use empty string for NOT NULL fields, null for nullable fields
+        const firstName = body.first_name ?? '';
+        const lastName = body.last_name ?? '';
+        const email = body.email ?? null;
+        const phone = body.phone ?? null;
+        const className = body.class ?? null;
+        const groupName = body.group_name ?? null;
+        const academicYear = body.academic_year ?? null;
+        const status = body.status ?? 'active';
+        const photo = body.photo ?? null;
+        const enrollmentDate = body.enrollment_date ?? null;
+        const notes = body.notes ?? null;
+        const guardianName = body.guardian_name ?? null;
+        const guardianPhone = body.guardian_phone ?? body.phone ?? null;
+        const address = body.address ?? null;
         // Try to add with guardian columns
         try {
           await env.DB.prepare(
@@ -327,7 +328,7 @@ export default {
         const id = generateId();
         await env.DB.prepare(
           'INSERT INTO classes (id, name, level, department, academic_year, capacity, schedule, teacher_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
-        ).bind(id, body.name, body.level || null, body.department || null, body.academic_year || null, body.capacity || 30, body.schedule || null, body.teacher_id || null).run();
+        ).bind(id, body.name ?? '', body.level ?? null, body.department ?? null, body.academic_year ?? null, body.capacity ?? 30, body.schedule ?? null, body.teacher_id ?? null).run();
         return jsonResponse({ success: true, data: { id, ...body } }, 201);
       }
 
@@ -367,7 +368,7 @@ export default {
         const id = generateId();
         await env.DB.prepare(
           'INSERT INTO modules (id, name, code, class_id, teacher_id, schedule, hours, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
-        ).bind(id, body.name, body.code || null, body.class_id || null, body.teacher_id || null, body.schedule || null, body.hours || 0, body.description || null).run();
+        ).bind(id, body.name ?? '', body.code ?? null, body.class_id ?? null, body.teacher_id ?? null, body.schedule ?? null, body.hours ?? 0, body.description ?? null).run();
         return jsonResponse({ success: true, data: { id, ...body } }, 201);
       }
 
@@ -414,7 +415,7 @@ export default {
         const id = generateId();
         await env.DB.prepare(
           'INSERT INTO tasks (id, title, description, assigned_to, assigned_by, priority, status, category, due_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
-        ).bind(id, body.title, body.description || null, body.assigned_to, session.user_id, body.priority || 'medium', body.status || 'pending', body.category || null, body.due_date || null).run();
+        ).bind(id, body.title ?? '', body.description ?? null, body.assigned_to ?? null, session.user_id, body.priority ?? 'medium', body.status ?? 'pending', body.category ?? null, body.due_date ?? null).run();
         return jsonResponse({ success: true, data: { id, ...body } }, 201);
       }
 
@@ -508,7 +509,7 @@ export default {
         const id = generateId();
         await env.DB.prepare(
           'INSERT INTO incidents (id, student_id, reported_by, type, severity, description, action_taken, status, incident_date, location, witnesses) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-        ).bind(id, body.student_id, session.user_id, body.type, body.severity || 'medium', body.description, body.action_taken || null, body.status || 'open', body.incident_date || null, body.location || null, body.witnesses || null).run();
+        ).bind(id, body.student_id ?? '', session.user_id, body.type ?? '', body.severity ?? 'medium', body.description ?? '', body.action_taken ?? null, body.status ?? 'open', body.incident_date ?? null, body.location ?? null, body.witnesses ?? null).run();
         return jsonResponse({ success: true, data: { id, ...body } }, 201);
       }
 
