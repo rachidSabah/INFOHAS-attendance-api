@@ -318,6 +318,82 @@ export default {
           });
         }
 
+        // POST /api/saas/switch-tenant/:id - Switch super admin to a specific tenant
+        if (path.match(/^\/api\/saas\/switch-tenant\/[^/]+$/) && method === 'POST') {
+          const id = path.split('/').pop();
+          
+          // Get target tenant
+          const tenant = await env.DB.prepare(
+            'SELECT id, slug, name, status, primary_color, secondary_color, logo_url, language FROM tenants WHERE id = ?'
+          ).bind(id).first();
+          if (!tenant) return errorResponse('Tenant not found', 404);
+          if (tenant.status === 'suspended') return errorResponse('School account is suspended', 403);
+          
+          // Find an admin user for this tenant
+          const adminUser = await env.DB.prepare(
+            "SELECT * FROM users WHERE tenant_id = ? AND role = 'admin' AND is_active = 1 LIMIT 1"
+          ).bind(id).first();
+          if (!adminUser) return errorResponse('No admin user found for this school', 404);
+          
+          // Create a new session for the admin user
+          const token = generateId() + generateId();
+          const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+          try {
+            await env.DB.prepare(
+              'INSERT INTO sessions (id, user_id, token, expires_at, tenant_id) VALUES (?, ?, ?, ?, ?)'
+            ).bind(generateId(), adminUser.id, token, expiresAt, tenant.id).run();
+          } catch (e) {
+            await env.DB.prepare(
+              'INSERT INTO sessions (id, user_id, token, expires_at) VALUES (?, ?, ?, ?)'
+            ).bind(generateId(), adminUser.id, token, expiresAt).run();
+          }
+          
+          return jsonResponse({
+            success: true,
+            token,
+            tenant: { id: tenant.id, slug: tenant.slug, name: tenant.name, primary_color: tenant.primary_color, secondary_color: tenant.secondary_color, logo_url: tenant.logo_url },
+            user: {
+              id: adminUser.id, username: adminUser.username, role: adminUser.role,
+              full_name: adminUser.full_name, email: adminUser.email, photo: adminUser.photo,
+              tenant_id: tenant.id, is_super_admin: adminUser.is_super_admin || false
+            }
+          });
+        }
+
+        // GET /api/saas/tenants/:id/export - Export all data for a specific tenant
+        if (path.match(/^\/api\/saas\/tenants\/[^/]+\/export$/) && method === 'GET') {
+          const id = path.split('/')[4];
+          const tenant = await env.DB.prepare('SELECT * FROM tenants WHERE id = ?').bind(id).first();
+          if (!tenant) return errorResponse('Tenant not found', 404);
+          
+          const data = { tenant: nullToEmpty(tenant) };
+          const tables = ['users', 'students', 'classes', 'modules', 'attendance', 'incidents', 'tasks', 'task_comments', 'task_files', 'settings', 'subscriptions'];
+          for (const table of tables) {
+            try {
+              const rows = await env.DB.prepare(`SELECT * FROM ${table} WHERE tenant_id = ?`).bind(id).all();
+              data[table] = nullToEmpty(rows.results);
+            } catch(e) {
+              data[table] = [];
+            }
+          }
+          return jsonResponse({ success: true, data });
+        }
+
+        // DELETE /api/saas/tenants/:id/data/:table - Reset specific table data for a tenant
+        if (path.match(/^\/api\/saas\/tenants\/[^/]+\/data\/[^/]+$/) && method === 'DELETE') {
+          const parts = path.split('/');
+          const id = parts[4];
+          const table = parts[6];
+          const allowedTables = ['attendance', 'students', 'classes', 'modules', 'incidents', 'incident_files', 'tasks', 'task_comments', 'task_files'];
+          if (!allowedTables.includes(table)) return errorResponse('Invalid table name', 400);
+          try {
+            await env.DB.prepare(`DELETE FROM ${table} WHERE tenant_id = ?`).bind(id).run();
+            return jsonResponse({ success: true });
+          } catch(e) {
+            return errorResponse('Reset failed: ' + e.message, 500);
+          }
+        }
+
         return errorResponse('Not found', 404);
       } catch (e) {
         return errorResponse('Super-admin error: ' + e.message, 500);
