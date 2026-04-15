@@ -176,3 +176,25 @@ Stage Summary:
 - Clicking chart bars navigates to Reports page for detailed analytics
 - All remaining XSS vulnerabilities patched
 - Zero unescaped innerHTML patterns remaining
+---
+Task ID: 1
+Agent: Main Agent
+Task: Fix admin password change bug and remove login details from login page
+
+Work Log:
+- Investigated the password change bug: user gets "Le mot de passe actuel incorrect" when trying to change password
+- Root cause 1: `apiPost()` returns `null` on non-2xx responses, swallowing error details from the API
+- Root cause 2: The `handleChangePassword` function couldn't distinguish between "API error" and "API unavailable"
+- Root cause 3: `currentUser.password` is undefined after page refresh because API GET /users doesn't return passwords
+- Root cause 4: The fallback to local-only update was dangerous - it would change password locally even when API said it was wrong
+- Fix 1: Rewrote `handleChangePassword` to use `fetch()` directly instead of `apiPost()`, properly handling error responses
+- Fix 2: Added `password` field to auth storage during login, so it persists across page refreshes
+- Fix 3: Updated `checkAuthentication()` to restore password from auth storage
+- Fix 4: Updated `updateLocalPassword()` to also update the auth storage
+- Fix 5: Verified login details ("Default: admin / admin123") already removed from local code in previous session
+- Production deployment will remove the visible credentials from the login page
+
+Stage Summary:
+- Password change bug fixed with proper API error handling
+- Login credentials no longer visible on login page (will take effect after deploy)
+- Password now persists across page refreshes via auth storage
