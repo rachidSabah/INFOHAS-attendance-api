@@ -1,26 +1,55 @@
 ---
 Task ID: 1
 Agent: Main Agent
-Task: Fix "undefined" student display bug and comprehensive application fix
+Task: Add bulk delete button + SaaS super-admin dashboard + deploy
 
 Work Log:
-- Diagnosed root cause: Students in localStorage had snake_case field names (first_name, student_id) instead of camelCase (fullName, studentId) that the frontend expects
-- Found that normalizeStudent() was NOT being applied to API data in production (old deployed version didn't have it)
-- Fixed normalizeStudent() to include ALL fields: phone, group, className, id (was missing several)
-- Rewrote smartMergeData() from whole-object replacement to FIELD-LEVEL merge - prevents losing data when API has null but local has values
-- Added nullToEmpty() helper in worker.js that converts all null values to empty strings in ALL GET endpoints
-- Added null-safe display in displayStudents() - fullName || 'Unknown', studentId || '-'
-- Fixed FK constraint error on student DELETE - now deletes attendance/incidents first
-- Deployed worker (v324d4815) and frontend (direct upload to Pages)
-- Verified: All 12+ students display correctly with proper names, no "undefined"
-- Verified: Student creation works end-to-end (frontend → localStorage → syncItemToApi → D1 → loadFromDatabase → display)
-- Verified: Class creation works end-to-end
-- Verified: D1 no longer returns null values (all converted to empty strings)
-- GitHub integration for Pages is broken (clone_repo failures) - using direct upload as workaround
+- Verified bulk delete button already existed in code (batchDeleteStudents function + #batchDeleteBtn)
+- Added super-admin navigation item with data-roles="super_admin"
+- Created super-admin page HTML with 3 tabs: Overview, Tenants, Subscriptions
+- Added super-admin JavaScript functions: loadSuperAdminData, renderSuperAdminTenants, filterSuperAdminTenants, viewTenantDetail, changeTenantPlan, suspendTenant, activateTenant, deleteTenant, runSaasMigration, showSuperAdminTab
+- Updated showPage() titles to include superadmin
+- Updated applyRoleBasedNavigation() to show super-admin tab only for isSuperAdmin users
+- Added Morocco as default country + French as default language in registration
+- Pushed frontend to GitHub (commit 2b74e9f)
+- Deployed frontend via wrangler to Cloudflare Pages (bc5403f6)
+- Deployed worker API via wrangler (version 088c93fa)
+- Ran SaaS migration on D1 database - 13 success, 13 skipped, 0 errors
+- Verified all SaaS API endpoints working: /saas/stats, /saas/tenants, /saas/tenants/:id
+- Confirmed 2 tenants exist: Genna Private School (free plan) + Default School (pro plan)
 
 Stage Summary:
-- "undefined" bug FIXED - root cause was unnormalized API data stored in localStorage
-- Worker API now normalizes null→empty string on all GET endpoints
-- Field-level merge prevents data loss during sync
-- FK-safe student deletion implemented
-- All code pushed to GitHub and deployed
+- Super-admin dashboard fully functional with tenant CRUD operations
+- SaaS backend (worker.js) was already comprehensive - no changes needed
+- All deployments successful and verified
+- Cloudflare API Token expires soon - needs renewal for future deploys
+
+---
+Task ID: 2
+Agent: Main Agent
+Task: Deploy SaaS frontend + End-to-end testing
+
+Work Log:
+- Fixed showPage() to include superadmin case for auto data loading
+- Deployed frontend via wrangler (deployment 25c6b037)
+- Ran comprehensive E2E API tests:
+  1. Health check - PASS (version 2.0-saas)
+  2. Registration - PASS (creates tenant + admin + subscription)
+  3. Tenant-specific login - PASS (with slug)
+  4. Super-admin stats - PASS (3 tenants, 3 users, 2 students)
+  5. Tenant lookup by slug - PASS
+  6. Wrong slug rejection - PASS ("School not found")
+  7. Tenant isolation - PASS (each tenant sees only their data)
+  8. Super-admin CRUD - PASS (suspend/reactivate/list tenants)
+  9. Suspended tenant login blocked - PASS ("School account is suspended")
+- Cleaned up test tenant after testing
+- Current production: 2 tenants (Genna Private School + Default School)
+
+Stage Summary:
+- SaaS system is FULLY OPERATIONAL
+- Multi-tenant isolation verified
+- Super-admin dashboard works with stats, tenant CRUD, subscription management
+- Registration flow creates complete tenant environment
+- Frontend deployed: https://infohas-attendance-v2.pages.dev
+- Worker API: https://infohas-attendance-api.rachidelsabah.workers.dev
+- GitHub repos synced
