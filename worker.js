@@ -415,7 +415,7 @@ export default {
         const id = generateId();
         await env.DB.prepare(
           'INSERT INTO tasks (id, title, description, assigned_to, assigned_by, priority, status, category, due_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
-        ).bind(id, body.title ?? '', body.description ?? null, body.assigned_to ?? null, session.user_id, body.priority ?? 'medium', body.status ?? 'pending', body.category ?? null, body.due_date ?? null).run();
+        ).bind(id, body.title ?? '', body.description ?? null, body.assigned_to ?? '', session.user_id, body.priority ?? 'medium', body.status ?? 'pending', body.category ?? null, body.due_date ?? null).run();
         return jsonResponse({ success: true, data: { id, ...body } }, 201);
       }
 
