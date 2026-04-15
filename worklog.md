@@ -40,3 +40,26 @@ Work Log:
 Stage Summary:
 - Worker needs manual deployment via Cloudflare dashboard
 - User needs to: 1) Deploy worker 2) Run D1 migration to add new columns
+
+---
+Task ID: 3
+Agent: Main
+Task: Fix student addition bug and deploy
+
+Work Log:
+- Found syncItemToApi used POST for both create and update (should use PUT for update)
+- Found syncSaveToApi POSTed ALL students every time, creating D1 duplicates
+- Found photoPreview.src could save invalid URL when no photo uploaded
+- Found editingId not reset after save, could cause next add to be treated as update
+- Found form not reset when opening Add Student modal
+- Fixed all issues and pushed to GitHub
+
+Stage Summary:
+- Fixed syncItemToApi to use PUT for updates, POST for creates
+- Fixed syncSaveToApi to use PUT first, then POST fallback (avoids D1 duplicates)
+- Fixed showAddStudentModal to reset form and photo preview
+- Fixed photo preview to only save actual data URLs
+- Fixed editingId reset with wasEditing flag
+- Applied same fixes to saveClass function
+- Frontend deployed to GitHub (auto-deploys to Cloudflare Pages)
+- Worker API needs manual deployment (Cloudflare token format issue)
