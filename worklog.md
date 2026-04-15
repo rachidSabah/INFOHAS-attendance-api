@@ -1,32 +1,42 @@
 ---
 Task ID: 1
-Agent: Main Agent
-Task: Fix critical data loss bug - loadFromDatabase() wiping localStorage on login
+Agent: Main
+Task: Debug and fix Students page showing no students while Attendance page shows many
 
 Work Log:
-- Investigated the D1 database via API - confirmed it was empty (0 students, 0 classes)
-- Root cause identified: loadFromDatabase() blindly replaced localStorage with API data, even when API returned empty arrays
-- User's data (created yesterday) was only in localStorage, never synced to D1
-- On re-login, loadFromDatabase() fetched empty arrays from D1 and overwrote localStorage, erasing all user data
-
-- Fixed loadFromDatabase() with smartMergeData() function:
-  - If API returns empty arrays, keeps existing localStorage data intact
-  - If both have data, merges by ID (API data takes precedence for matching IDs, local-only items preserved)
-  - If API is empty but local data exists, automatically pushes local data to D1
-
-- Fixed syncSaveToApi() which was a no-op for arrays:
-  - Added proper field mapping for all data types (students, classes, attendance, tasks, incidents, modules, users)
-  - Added debounced sync (2s) to avoid overwhelming the API on rapid saves
-
-- Added syncItemToApi() for immediate single-item sync on CRUD operations:
-  - Added to saveStudent(), saveClass(), markAttendance(), finishSaveTask(), finishSaveIncident()
-  - Added to deleteStudent(), deleteClass()
-
-- Verified Features #13 (Bulk Attendance Actions), #14 (Student Cards/ID Generator), #15 (Offline Indicator & Sync Status) are all already implemented
-
-- Pushed to GitHub and deployed to Cloudflare Pages
+- Investigated data flow: loadStudents() -> filterStudents() -> displayStudents()
+- Found PRIMARY BUG: filterStudents() called .toLowerCase() on student.fullName and student.studentId without null-checks, causing TypeError crash if either was null/undefined
+- Found SECONDARY BUGS: syncSaveToApi(), syncToDatabase(), loadFromDatabase() all used wrong field names (firstName instead of fullName, phone instead of guardianPhone, class instead of classId)
+- Found MISSING MAPPING: normalizeStudent() didn't map guardian_name from API, so guardianName was always empty after loading from D1
+- Found DUPLICATE FUNCTION: Two displayStudents() functions existed (line 8499 and 13961)
+- Found NULL-SAFETY ISSUES: Multiple filter functions across the app had .toLowerCase() calls on potentially null values
 
 Stage Summary:
-- Critical data loss bug fixed and deployed
-- All 15 planned features are now implemented
-- User needs to recreate their class and student (data was already lost from D1 before fix)
+- Fixed filterStudents() with null-safe string operations
+- Fixed normalizeStudent() to map guardian_name, guardian_phone, student_id from API
+- Fixed syncSaveToApi() field mapping (fullName->first_name, guardianPhone->phone, classId->class)
+- Fixed syncToDatabase() field mapping
+- Fixed loadFromDatabase() push-to-API field mapping
+- Fixed saveStudent() syncItemToApi to include new fields
+- Removed duplicate displayStudents() function
+- Added null-safety to: module filter, task filter, incident filter, employee filter, teacher filter
+- Fixed null-safety in localeCompare calls for attendance sorting
+- Fixed CSV import duplicate check null-safety
+- Added /api/migrate endpoint to worker for D1 schema migration
+- Added auto-migration call on login
+- Pushed frontend to GitHub (auto-deploys to Cloudflare Pages)
+- Pushed worker to GitHub (needs manual Cloudflare deploy)
+
+---
+Task ID: 2
+Agent: Main
+Task: Deploy worker API to Cloudflare
+
+Work Log:
+- Worker code pushed to https://github.com/rachidSabah/INFOHAS-attendance-api
+- Cannot deploy via wrangler (no CLOUDFLARE_API_TOKEN available)
+- Worker has fallback for missing columns, so app works even without D1 migration
+
+Stage Summary:
+- Worker needs manual deployment via Cloudflare dashboard
+- User needs to: 1) Deploy worker 2) Run D1 migration to add new columns
