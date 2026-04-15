@@ -631,6 +631,28 @@ export default {
         return jsonResponse({ success: true, data: { imported } });
       }
 
+      // ==================== DATABASE MIGRATION ====================
+      if (path === '/api/migrate' && method === 'POST') {
+        if (session.role !== 'admin') return errorResponse('Forbidden', 403);
+        const migrations = [
+          'ALTER TABLE students ADD COLUMN guardian_name TEXT',
+          'ALTER TABLE students ADD COLUMN guardian_phone TEXT',
+          'ALTER TABLE students ADD COLUMN student_id TEXT',
+          'ALTER TABLE students ADD COLUMN address TEXT'
+        ];
+        const results = [];
+        for (const sql of migrations) {
+          try {
+            await env.DB.prepare(sql).run();
+            results.push({ sql, status: 'success' });
+          } catch (e) {
+            // Column likely already exists
+            results.push({ sql, status: 'skipped', reason: e.message });
+          }
+        }
+        return jsonResponse({ success: true, data: results });
+      }
+
       // ==================== CURRENT USER ====================
       if (path === '/api/me' && method === 'GET') {
         const user = await env.DB.prepare('SELECT id, username, role, full_name, email, phone, photo, department FROM users WHERE id = ?').bind(session.user_id).first();
