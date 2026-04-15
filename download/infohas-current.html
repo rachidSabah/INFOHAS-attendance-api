@@ -17097,11 +17097,13 @@
                         <div><strong>Primary Color:</strong> <span style="display:inline-block;width:20px;height:20px;background:${t.primary_color || '#6366f1'};border-radius:4px;vertical-align:middle;"></span> ${t.primary_color || '#6366f1'}</div>
                         <div><strong>Logo URL:</strong> ${t.logo_url ? '<a href="' + t.logo_url + '" target="_blank">View</a>' : 'None'}</div>
                     </div>
-                    <div style="margin-top:20px;display:flex;gap:10px;">
+                    <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;">
                         ${t.status === 'active'
                             ? `<button class="btn" style="background:#f59e0b;color:white;" onclick="suspendTenant('${t.id}')">Suspend</button>`
                             : `<button class="btn btn-success" onclick="activateTenant('${t.id}')">Activate</button>`
                         }
+                        <button class="btn" style="background:#3b82f6;color:white;" onclick="exportTenantData('${t.id}')">📥 Export Data</button>
+                        <button class="btn" style="background:#ef4444;color:white;" onclick="resetTenantData('${t.id}', '${t.name}')">⚠️ Reset Data</button>
                     </div>
                 `;
                 modal.classList.remove('hidden');
@@ -17136,6 +17138,50 @@
                 }
             } catch (e) {
                 showToast('Error activating tenant: ' + e.message, 'error');
+            }
+        }
+
+        async function exportTenantData(tenantId) {
+            try {
+                showToast('Exporting school data...', 'info');
+                const result = await apiGet('/saas/tenants/' + tenantId + '/export');
+                if (!result || !result.success) {
+                    showToast('Failed to export data: ' + (result?.error || 'Unknown error'), 'error');
+                    return;
+                }
+                const blob = new Blob([JSON.stringify(result.data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'school-data-' + tenantId + '-' + new Date().toISOString().split('T')[0] + '.json';
+                a.click();
+                URL.revokeObjectURL(url);
+                showToast('School data exported successfully');
+            } catch (e) {
+                showToast('Export failed: ' + e.message, 'error');
+            }
+        }
+
+        async function resetTenantData(tenantId, tenantName) {
+            if (!confirm('WARNING: This will delete ALL attendance, student, class, and module data for "' + tenantName + '". The school itself will remain. Are you sure?')) return;
+            if (!confirm('This action CANNOT be undone. Type "RESET" in the next prompt to confirm.')) return;
+            const confirmation = prompt('Type RESET to confirm deletion of all data for ' + tenantName + ':');
+            if (confirmation !== 'RESET') {
+                showToast('Reset cancelled', 'info');
+                return;
+            }
+            try {
+                showToast('Resetting school data...', 'info');
+                const tables = ['attendance', 'students', 'classes', 'modules', 'incidents', 'incident_files', 'tasks', 'task_comments', 'task_files'];
+                for (const table of tables) {
+                    try {
+                        await apiDelete('/saas/tenants/' + tenantId + '/data/' + table);
+                    } catch(e) {}
+                }
+                showToast('School data reset successfully');
+                loadSuperAdminData();
+            } catch (e) {
+                showToast('Reset failed: ' + e.message, 'error');
             }
         }
 
@@ -17236,87 +17282,91 @@
         async function switchToTenant(tenantId, tenantName) {
             if (!confirm(`Switch to "${tenantName}"? You will be logged into that school as an admin. You can return to Super Admin anytime.`)) return;
             try {
-                // Backup current super admin session
-                const currentAuth = JSON.parse(localStorage.getItem('auth') || '{}');
-                localStorage.setItem('superAdminBackup', JSON.stringify(currentAuth));
-
-                // Fetch tenant details to get slug
-                const tenantResult = await apiGet('/saas/tenants/' + tenantId);
-                if (!tenantResult || !tenantResult.success) {
-                    showToast('Failed to load school details', 'error');
+                showToast('Switching school...', 'info');
+                const result = await apiPost('/saas/switch-tenant/' + tenantId, {});
+                if (!result || !result.success) {
+                    showToast('Failed to switch school: ' + (result?.error || 'Unknown error'), 'error');
                     return;
                 }
-                const tenant = tenantResult.data;
-
-                // Fetch users for this tenant to find an admin user
-                const usersResult = await apiGet('/users?tenant_id=' + tenantId);
-                let adminUser = null;
-                if (usersResult && usersResult.success && usersResult.data) {
-                    adminUser = usersResult.data.find(u => u.role === 'admin' && u.is_active !== 0);
+                // Save original super admin token for returning
+                const currentAuth = JSON.parse(localStorage.getItem('attendance_auth') || '{}');
+                if (!localStorage.getItem('superAdminBackup')) {
+                    localStorage.setItem('superAdminBackup', JSON.stringify({
+                        token: currentAuth.token,
+                        user: currentAuth.user
+                    }));
                 }
-
-                // Create a switched auth context
-                const switchedAuth = {
-                    ...currentAuth,
-                    tenant_id: tenantId,
-                    role: 'admin',
-                    isSuperAdmin: true,
-                    switchedFromSuperAdmin: true,
-                    switchedTenantName: tenantName
+                // Update auth with new session
+                const authData = {
+                    token: result.token,
+                    user: result.user,
+                    tenantId: result.tenant?.id || tenantId,
+                    switchedTenantName: tenantName,
+                    isSwitchedFromSuperAdmin: true
                 };
-
-                localStorage.setItem('auth', JSON.stringify(switchedAuth));
-                if (typeof auth !== 'undefined') {
-                    Object.assign(auth, switchedAuth);
+                saveToStorage('attendance_auth', authData);
+                if (result.tenant) {
+                    saveToStorage('attendance_tenant', result.tenant);
+                    applyTenantBranding(result.tenant);
                 }
-
-                // Show return button
-                const returnBtn = document.getElementById('returnToSuperAdminBtn');
-                if (returnBtn) returnBtn.classList.remove('hidden');
-
-                // Update UI for switched context
-                updateUIForRole();
+                // Update API token
+                if (typeof apiToken !== 'undefined') apiToken = result.token;
                 showToast(`Switched to ${tenantName}. Click "Return to Super Admin" to go back.`);
-
-                // Navigate to dashboard
-                if (typeof navigateToPage === 'function') {
-                    navigateToPage('dashboard');
-                }
-
+                // Show return button
+                showReturnToSuperAdminButton();
                 // Reload data for the new tenant
-                if (typeof loadDashboard === 'function') loadDashboard();
+                setTimeout(() => {
+                    loadDashboard();
+                }, 500);
             } catch (e) {
                 showToast('Error switching school: ' + e.message, 'error');
             }
         }
 
-        function returnToSuperAdmin() {
+        function showReturnToSuperAdminButton() {
+            // Add floating return button if not exists
+            if (document.getElementById('returnToSuperAdminBtn')) return;
+            const btn = document.createElement('button');
+            btn.id = 'returnToSuperAdminBtn';
+            btn.innerHTML = '⬅ Return to Super Admin';
+            btn.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:10000;background:#8b5cf6;color:white;border:none;padding:12px 20px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:600;box-shadow:0 4px 12px rgba(0,0,0,0.2);transition:all 0.2s;';
+            btn.onmouseover = function() { this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(0,0,0,0.3)'; };
+            btn.onmouseout = function() { this.style.transform=''; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.2)'; };
+            btn.onclick = returnToSuperAdmin;
+            document.body.appendChild(btn);
+        }
+
+        async function returnToSuperAdmin() {
             try {
                 const backup = localStorage.getItem('superAdminBackup');
                 if (!backup) {
-                    showToast('No super admin backup found', 'error');
+                    showToast('No super admin session found. Please log in again.', 'error');
+                    showLoginScreen();
                     return;
                 }
-                const superAdminAuth = JSON.parse(backup);
-                localStorage.setItem('auth', JSON.stringify(superAdminAuth));
+                const { token, user } = JSON.parse(backup);
+                const authData = {
+                    token: token,
+                    user: user,
+                    tenantId: null,
+                    isSwitchedFromSuperAdmin: false
+                };
+                saveToStorage('attendance_auth', authData);
                 localStorage.removeItem('superAdminBackup');
-
-                if (typeof auth !== 'undefined') {
-                    Object.assign(auth, superAdminAuth);
-                }
-
-                // Hide return button
-                const returnBtn = document.getElementById('returnToSuperAdminBtn');
-                if (returnBtn) returnBtn.classList.add('hidden');
-
-                // Update UI
-                updateUIForRole();
+                localStorage.removeItem('attendance_tenant');
+                if (typeof apiToken !== 'undefined') apiToken = token;
+                // Remove return button
+                const btn = document.getElementById('returnToSuperAdminBtn');
+                if (btn) btn.remove();
+                // Reset branding
+                document.documentElement.style.setProperty('--primary', '');
+                document.documentElement.style.setProperty('--secondary', '');
+                document.title = 'INFOHAS - Attendance System';
                 showToast('Returned to Super Admin');
-
-                // Navigate to super admin page
-                if (typeof navigateToPage === 'function') {
-                    navigateToPage('superadmin');
-                }
+                setTimeout(() => {
+                    loadDashboard();
+                    if (typeof showSuperAdminTab === 'function') showSuperAdminTab('overview');
+                }, 500);
             } catch (e) {
                 showToast('Error returning to Super Admin: ' + e.message, 'error');
             }
