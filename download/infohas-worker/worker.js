@@ -176,10 +176,20 @@ export default {
 
       if (path === '/api/students' && method === 'POST') {
         const body = await request.json();
-        const id = generateId();
-        await env.DB.prepare(
-          'INSERT INTO students (id, first_name, last_name, email, phone, class, group_name, academic_year, status, photo, enrollment_date, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-        ).bind(id, body.first_name, body.last_name, body.email || null, body.phone || null, body.class || null, body.group_name || null, body.academic_year || null, body.status || 'active', body.photo || null, body.enrollment_date || null, body.notes || null).run();
+        const id = body.id || generateId();
+        // Use provided student_id or generate one
+        const studentId = body.student_id || body.studentId || id.substring(0, 8).toUpperCase();
+        // Try to add guardian columns - if they don't exist yet, the query will still work with the base columns
+        try {
+          await env.DB.prepare(
+            'INSERT INTO students (id, first_name, last_name, email, phone, class, group_name, academic_year, status, photo, enrollment_date, notes, guardian_name, guardian_phone, student_id, address) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+          ).bind(id, body.first_name, body.last_name, body.email || null, body.phone || null, body.class || null, body.group_name || null, body.academic_year || null, body.status || 'active', body.photo || null, body.enrollment_date || null, body.notes || null, body.guardian_name || null, body.guardian_phone || body.phone || null, studentId, body.address || null).run();
+        } catch (e) {
+          // Fallback if guardian columns don't exist yet
+          await env.DB.prepare(
+            'INSERT INTO students (id, first_name, last_name, email, phone, class, group_name, academic_year, status, photo, enrollment_date, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+          ).bind(id, body.first_name, body.last_name, body.email || null, body.phone || null, body.class || null, body.group_name || null, body.academic_year || null, body.status || 'active', body.photo || null, body.enrollment_date || null, body.notes || null).run();
+        }
         return jsonResponse({ success: true, data: { id, ...body } }, 201);
       }
 
@@ -212,7 +222,7 @@ export default {
         const sets = [];
         const vals = [];
         for (const [k, v] of Object.entries(body)) {
-          if (['first_name', 'last_name', 'email', 'phone', 'class', 'group_name', 'academic_year', 'status', 'photo', 'enrollment_date', 'notes'].includes(k)) {
+          if (['first_name', 'last_name', 'email', 'phone', 'class', 'group_name', 'academic_year', 'status', 'photo', 'enrollment_date', 'notes', 'guardian_name', 'guardian_phone', 'student_id', 'address'].includes(k)) {
             sets.push(`${k} = ?`);
             vals.push(v);
           }
