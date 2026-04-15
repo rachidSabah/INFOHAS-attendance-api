@@ -1,1 +1,14 @@
-node_modules/\n.DS_Store\n.env
+# Dependencies and build artifacts
+skills/
+agent-ctx/
+download/
+upload/
+deploy-frontend/
+worklog.md
+INFOHAS-attendance/
+INFOHAS-attendance-api/
+infohas-attendance-system/
+.gitmodules
+*.pyc
+__pycache__/
+.DS_Store
