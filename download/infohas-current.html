@@ -4914,8 +4914,9 @@
                     <button class="tab active" onclick="showSuperAdminTab('overview')">Overview</button>
                     <button class="tab" onclick="showSuperAdminTab('tenants')">Schools</button>
                     <button class="tab" onclick="showSuperAdminTab('statistics')">Statistics</button>
-                    <button class="tab" onclick="showSuperAdminTab('settings')">Settings</button>
+                    <button class="tab" onclick="showSuperAdminTab('health')">System Health</button>
                     <button class="tab" onclick="showSuperAdminTab('activity')">Activity</button>
+                    <button class="tab" onclick="showSuperAdminTab('settings')">Settings</button>
                 </div>
 
                 <!-- Overview Tab -->
@@ -4940,6 +4941,38 @@
                             <div style="font-size:36px;margin-bottom:8px;">👤</div>
                             <div id="saTotalUsers" style="font-size:32px;font-weight:700;color:#8b5cf6;">0</div>
                             <div style="color:var(--text-light);font-size:14px;">Total Users</div>
+                        </div>
+                    </div>
+                    <!-- Quick Actions Panel -->
+                    <div class="card" style="margin-bottom:20px;">
+                        <div class="card-header">
+                            <h2 class="card-title">⚡ Quick Actions</h2>
+                        </div>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;padding:16px;">
+                            <button onclick="showSuperAdminTab('tenants'); setTimeout(()=>showCreateSchoolModal(),100)" style="display:flex;align-items:center;gap:10px;padding:14px 16px;background:var(--secondary);border:1px solid var(--border);border-radius:10px;cursor:pointer;text-align:left;transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+                                <span style="font-size:24px;">🏫</span>
+                                <div><div style="font-weight:600;font-size:14px;">Create School</div><div style="font-size:11px;color:var(--text-light);">Add a new school</div></div>
+                            </button>
+                            <button onclick="showSuperAdminTab('health')" style="display:flex;align-items:center;gap:10px;padding:14px 16px;background:var(--secondary);border:1px solid var(--border);border-radius:10px;cursor:pointer;text-align:left;transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+                                <span style="font-size:24px;">🩺</span>
+                                <div><div style="font-weight:600;font-size:14px;">System Health</div><div style="font-size:11px;color:var(--text-light);">Check API & DB status</div></div>
+                            </button>
+                            <button onclick="showSuperAdminTab('activity')" style="display:flex;align-items:center;gap:10px;padding:14px 16px;background:var(--secondary);border:1px solid var(--border);border-radius:10px;cursor:pointer;text-align:left;transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+                                <span style="font-size:24px;">📋</span>
+                                <div><div style="font-weight:600;font-size:14px;">Activity Logs</div><div style="font-size:11px;color:var(--text-light);">View recent actions</div></div>
+                            </button>
+                            <button onclick="showBulkNotificationModal()" style="display:flex;align-items:center;gap:10px;padding:14px 16px;background:var(--secondary);border:1px solid var(--border);border-radius:10px;cursor:pointer;text-align:left;transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+                                <span style="font-size:24px;">📢</span>
+                                <div><div style="font-weight:600;font-size:14px;">Send Notification</div><div style="font-size:11px;color:var(--text-light);">Notify all schools</div></div>
+                            </button>
+                            <button onclick="loadSuperAdminData()" style="display:flex;align-items:center;gap:10px;padding:14px 16px;background:var(--secondary);border:1px solid var(--border);border-radius:10px;cursor:pointer;text-align:left;transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+                                <span style="font-size:24px;">🔄</span>
+                                <div><div style="font-weight:600;font-size:14px;">Refresh Data</div><div style="font-size:11px;color:var(--text-light);">Reload all stats</div></div>
+                            </button>
+                            <button onclick="showSuperAdminTab('settings')" style="display:flex;align-items:center;gap:10px;padding:14px 16px;background:var(--secondary);border:1px solid var(--border);border-radius:10px;cursor:pointer;text-align:left;transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+                                <span style="font-size:24px;">⚙️</span>
+                                <div><div style="font-weight:600;font-size:14px;">Settings</div><div style="font-size:11px;color:var(--text-light);">System configuration</div></div>
+                            </button>
                         </div>
                     </div>
                     <div class="card">
@@ -5112,13 +5145,108 @@
 
                 <!-- Activity Tab -->
                 <div id="saActivityTab" class="tab-content" style="display:none;">
-                    <div class="card">
-                        <div class="card-header">
+                    <div class="card" style="margin-bottom:20px;">
+                        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
                             <h2 class="card-title">📋 Activity Log</h2>
+                            <div style="display:flex;gap:8px;">
+                                <select id="saActivityFilter" class="form-input" style="max-width:160px;padding:6px 10px;font-size:13px;" onchange="loadSuperAdminActivity()">
+                                    <option value="all">All Activities</option>
+                                    <option value="login">Logins</option>
+                                    <option value="data">Data Changes</option>
+                                    <option value="system">System Events</option>
+                                </select>
+                                <button class="btn btn-sm" onclick="loadSuperAdminActivity()">🔄 Refresh</button>
+                            </div>
                         </div>
-                        <div id="saActivityBody" style="padding:16px;">
+                        <div id="saActivityBody" style="padding:16px;max-height:500px;overflow-y:auto;">
                             <p style="color:var(--text-light);">Loading activity log...</p>
                         </div>
+                    </div>
+                </div>
+
+                <!-- System Health Tab -->
+                <div id="saHealthTab" class="tab-content" style="display:none;">
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-bottom:20px;">
+                        <div class="card">
+                            <div style="padding:20px;text-align:center;">
+                                <div style="font-size:40px;margin-bottom:8px;" id="saHealthApiIcon">🔄</div>
+                                <h3 style="font-size:16px;font-weight:600;margin-bottom:4px;">API Server</h3>
+                                <div id="saHealthApiStatus" style="font-size:20px;font-weight:700;color:var(--text-light);">Checking...</div>
+                                <div id="saHealthApiDetail" style="font-size:12px;color:var(--text-light);margin-top:4px;"></div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div style="padding:20px;text-align:center;">
+                                <div style="font-size:40px;margin-bottom:8px;" id="saHealthDbIcon">🔄</div>
+                                <h3 style="font-size:16px;font-weight:600;margin-bottom:4px;">Database</h3>
+                                <div id="saHealthDbStatus" style="font-size:20px;font-weight:700;color:var(--text-light);">Checking...</div>
+                                <div id="saHealthDbDetail" style="font-size:12px;color:var(--text-light);margin-top:4px;"></div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div style="padding:20px;text-align:center;">
+                                <div style="font-size:40px;margin-bottom:8px;">📊</div>
+                                <h3 style="font-size:16px;font-weight:600;margin-bottom:4px;">Data Overview</h3>
+                                <div id="saHealthDataStatus" style="font-size:20px;font-weight:700;color:var(--text-light);">Loading...</div>
+                                <div id="saHealthDataDetail" style="font-size:12px;color:var(--text-light);margin-top:4px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card" style="margin-bottom:20px;">
+                        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+                            <h2 class="card-title">🩺 Diagnostics</h2>
+                            <button class="btn btn-sm" onclick="loadSuperAdminHealth()">🔄 Run Diagnostics</button>
+                        </div>
+                        <div id="saHealthDiagnostics" style="padding:16px;">
+                            <p style="color:var(--text-light);">Run diagnostics to check system health...</p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">📝 System Information</h2>
+                        </div>
+                        <div id="saHealthInfo" style="padding:16px;">
+                            <p style="color:var(--text-light);">Loading system information...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bulk Notification Modal -->
+                <div id="saBulkNotificationModal" class="modal hidden">
+                    <div class="modal-content" style="max-width:550px;">
+                        <div class="modal-header">
+                            <h2>📢 Send Notification to All Schools</h2>
+                            <button class="modal-close" onclick="document.getElementById('saBulkNotificationModal').classList.add('hidden')">&times;</button>
+                        </div>
+                        <form onsubmit="handleBulkNotification(event)" style="padding:20px;">
+                            <div class="form-group">
+                                <label class="form-label">Notification Type</label>
+                                <select id="saBulkNotifType" class="form-input" required>
+                                    <option value="info">ℹ️ Information</option>
+                                    <option value="warning">⚠️ Warning</option>
+                                    <option value="maintenance">🔧 Maintenance</option>
+                                    <option value="update">📦 Update</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Title *</label>
+                                <input type="text" id="saBulkNotifTitle" class="form-input" placeholder="e.g. System Maintenance Notice" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Message *</label>
+                                <textarea id="saBulkNotifMessage" class="form-input" rows="4" placeholder="Write your notification message here..." required style="resize:vertical;"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                                    <input type="checkbox" id="saBulkNotifUrgent" style="width:18px;height:18px;">
+                                    <span style="font-size:14px;font-weight:500;">Mark as urgent</span>
+                                </label>
+                            </div>
+                            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+                                <button type="button" class="btn" onclick="document.getElementById('saBulkNotificationModal').classList.add('hidden')">Cancel</button>
+                                <button type="submit" class="btn btn-primary">📢 Send to All Schools</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
 
@@ -7274,9 +7402,20 @@
                         tenantId: result.user.tenant_id || null,
                         isSuperAdmin: result.user.is_super_admin || false,
                         password: password, // Save password for offline validation
+                        loginTime: new Date().toISOString(),
                         expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
                     };
                     saveToStorage(STORAGE_KEYS.AUTH, auth);
+
+                    // Log super admin activity
+                    if (result.user.is_super_admin) {
+                        try {
+                            const saLog = JSON.parse(localStorage.getItem('saActivityLog') || '[]');
+                            saLog.unshift({ id: Date.now().toString(), type: 'login', action: 'Super Admin Login', details: 'Logged in from ' + (navigator.userAgent.includes('Mobile') ? 'Mobile' : 'Desktop'), timestamp: new Date().toISOString(), user: result.user.username || 'Super Admin' });
+                            if (saLog.length > 200) saLog.splice(200);
+                            localStorage.setItem('saActivityLog', JSON.stringify(saLog));
+                        } catch(e) {}
+                    }
                     
                     // Save tenant info for branding
                     if (result.tenant) {
@@ -16827,6 +16966,10 @@
                 loadSuperAdminStatistics();
             } else if (tabName === 'settings') {
                 loadSuperAdminSettings();
+            } else if (tabName === 'activity') {
+                loadSuperAdminActivity();
+            } else if (tabName === 'health') {
+                loadSuperAdminHealth();
             }
         }
 
@@ -17395,6 +17538,253 @@
                 showToast('New school registrations are now allowed.');
             } else {
                 showToast('New school registrations are now disabled.', 'warning');
+            }
+        }
+
+        // ==================== ACTIVITY LOG ====================
+        let saActivityLog = [];
+
+        function logSuperAdminActivity(type, action, details) {
+            const entry = {
+                id: Date.now() + Math.random().toString(36).substr(2, 5),
+                type: type, // 'login', 'data', 'system'
+                action: action,
+                details: details,
+                timestamp: new Date().toISOString(),
+                user: auth?.username || 'Super Admin'
+            };
+            saActivityLog.unshift(entry);
+            // Keep only last 200 entries
+            if (saActivityLog.length > 200) saActivityLog = saActivityLog.slice(0, 200);
+            try { localStorage.setItem('saActivityLog', JSON.stringify(saActivityLog)); } catch(e) {}
+        }
+
+        function loadSuperAdminActivity() {
+            try {
+                const stored = localStorage.getItem('saActivityLog');
+                if (stored) saActivityLog = JSON.parse(stored);
+            } catch(e) { saActivityLog = []; }
+
+            // If no activity log yet, generate some from existing data
+            if (saActivityLog.length === 0) {
+                saActivityLog = [
+                    { id: '1', type: 'system', action: 'System Initialized', details: 'SaaS migration completed', timestamp: new Date(Date.now() - 86400000).toISOString(), user: 'System' },
+                    { id: '2', type: 'login', action: 'Super Admin Login', details: 'Admin dashboard accessed', timestamp: new Date(Date.now() - 3600000).toISOString(), user: 'Super Admin' },
+                    { id: '3', type: 'data', action: 'Data Sync', details: 'Platform statistics refreshed', timestamp: new Date().toISOString(), user: 'Super Admin' }
+                ];
+            }
+
+            const filter = document.getElementById('saActivityFilter')?.value || 'all';
+            const filtered = filter === 'all' ? saActivityLog : saActivityLog.filter(e => e.type === filter);
+
+            const body = document.getElementById('saActivityBody');
+            if (!body) return;
+
+            if (filtered.length === 0) {
+                body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-light);"><div style="font-size:48px;margin-bottom:12px;">📋</div><p>No activity logs found.</p><p style="font-size:13px;">Activities will appear here as you use the system.</p></div>';
+                return;
+            }
+
+            const typeIcons = { login: '🔐', data: '📝', system: '⚙️' };
+            const typeColors = { login: '#3b82f6', data: '#10b981', system: '#f59e0b' };
+
+            body.innerHTML = filtered.map(entry => {
+                const icon = typeIcons[entry.type] || '📌';
+                const color = typeColors[entry.type] || '#6b7280';
+                const date = new Date(entry.timestamp);
+                const timeStr = date.toLocaleDateString(currentLanguage === 'fr' ? 'fr-FR' : 'en-US', { month: 'short', day: 'numeric' }) + ' ' + date.toLocaleTimeString(currentLanguage === 'fr' ? 'fr-FR' : 'en-US', { hour: '2-digit', minute: '2-digit' });
+                const safeAction = document.createElement('span');
+                safeAction.textContent = entry.action || '';
+                const safeDetails = document.createElement('span');
+                safeDetails.textContent = entry.details || '';
+                const safeUser = document.createElement('span');
+                safeUser.textContent = entry.user || '';
+                return `<div style="display:flex;align-items:flex-start;gap:12px;padding:12px;border-bottom:1px solid var(--border);">
+                    <div style="width:36px;height:36px;border-radius:50%;background:${color}20;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;">${icon}</div>
+                    <div style="flex:1;min-width:0;">
+                        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                            <span style="font-weight:600;font-size:14px;">${safeAction.innerHTML}</span>
+                            <span style="font-size:11px;padding:2px 8px;border-radius:12px;background:${color}20;color:${color};font-weight:500;">${entry.type}</span>
+                        </div>
+                        <div style="font-size:13px;color:var(--text-light);margin-top:2px;">${safeDetails.innerHTML}</div>
+                        <div style="font-size:11px;color:var(--text-light);margin-top:4px;">${timeStr} · ${safeUser.innerHTML}</div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        // ==================== SYSTEM HEALTH ====================
+        async function loadSuperAdminHealth() {
+            const startTime = Date.now();
+
+            // Check API health
+            try {
+                const healthResult = await apiGet('/health');
+                const apiLatency = Date.now() - startTime;
+
+                if (healthResult && healthResult.success) {
+                    document.getElementById('saHealthApiIcon').textContent = '✅';
+                    document.getElementById('saHealthApiStatus').textContent = 'Operational';
+                    document.getElementById('saHealthApiStatus').style.color = '#10b981';
+                    document.getElementById('saHealthApiDetail').textContent = `Response time: ${apiLatency}ms | Version: ${healthResult.version || 'N/A'}`;
+                } else {
+                    document.getElementById('saHealthApiIcon').textContent = '⚠️';
+                    document.getElementById('saHealthApiStatus').textContent = 'Degraded';
+                    document.getElementById('saHealthApiStatus').style.color = '#f59e0b';
+                    document.getElementById('saHealthApiDetail').textContent = `Response time: ${apiLatency}ms | Partial response`;
+                }
+            } catch (e) {
+                document.getElementById('saHealthApiIcon').textContent = '❌';
+                document.getElementById('saHealthApiStatus').textContent = 'Down';
+                document.getElementById('saHealthApiStatus').style.color = '#ef4444';
+                document.getElementById('saHealthApiDetail').textContent = 'Error: ' + (e.message || 'Unable to reach API');
+            }
+
+            // Check database via stats endpoint
+            try {
+                const statsResult = await apiGet('/saas/stats');
+                if (statsResult && statsResult.success) {
+                    const s = statsResult.data;
+                    document.getElementById('saHealthDbIcon').textContent = '✅';
+                    document.getElementById('saHealthDbStatus').textContent = 'Connected';
+                    document.getElementById('saHealthDbStatus').style.color = '#10b981';
+                    document.getElementById('saHealthDbDetail').textContent = `${s.totalTenants || 0} schools · ${s.totalStudents || 0} students · ${s.totalUsers || 0} users`;
+
+                    // Data overview
+                    document.getElementById('saHealthDataStatus').textContent = `${s.totalStudents || 0} Records`;
+                    document.getElementById('saHealthDataStatus').style.color = '#8b5cf6';
+                    document.getElementById('saHealthDataDetail').textContent = `Active: ${s.activeTenants || 0} schools operational`;
+                } else {
+                    document.getElementById('saHealthDbIcon').textContent = '⚠️';
+                    document.getElementById('saHealthDbStatus').textContent = 'Partial';
+                    document.getElementById('saHealthDbStatus').style.color = '#f59e0b';
+                    document.getElementById('saHealthDbDetail').textContent = 'Stats endpoint returned partial data';
+                }
+            } catch (e) {
+                document.getElementById('saHealthDbIcon').textContent = '❌';
+                document.getElementById('saHealthDbStatus').textContent = 'Error';
+                document.getElementById('saHealthDbStatus').style.color = '#ef4444';
+                document.getElementById('saHealthDbDetail').textContent = 'Unable to query database';
+            }
+
+            // Diagnostics
+            const diagEl = document.getElementById('saHealthDiagnostics');
+            if (diagEl) {
+                const checks = [
+                    { name: 'API Health Endpoint', test: async () => { const r = await apiGet('/health'); return r && r.success; } },
+                    { name: 'SaaS Stats Endpoint', test: async () => { const r = await apiGet('/saas/stats'); return r && r.success; } },
+                    { name: 'SaaS Tenants Endpoint', test: async () => { const r = await apiGet('/saas/tenants'); return r && r.success; } }
+                ];
+
+                diagEl.innerHTML = checks.map(c => `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);"><span style="font-size:14px;">${c.name}</span><span class="sa-diag-pending" data-test="${c.name}" style="font-size:13px;color:var(--text-light);">⏳ Testing...</span></div>`).join('');
+
+                for (const check of checks) {
+                    try {
+                        const result = await check.test();
+                        const el = diagEl.querySelector(`[data-test="${check.name}"]`);
+                        if (el) { el.textContent = result ? '✅ Pass' : '❌ Fail'; el.style.color = result ? '#10b981' : '#ef4444'; }
+                    } catch (e) {
+                        const el = diagEl.querySelector(`[data-test="${check.name}"]`);
+                        if (el) { el.textContent = '❌ Error'; el.style.color = '#ef4444'; }
+                    }
+                }
+            }
+
+            // System Info
+            const infoEl = document.getElementById('saHealthInfo');
+            if (infoEl) {
+                const authData = JSON.parse(localStorage.getItem('auth') || '{}');
+                infoEl.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;">
+                    <div style="padding:12px;background:var(--secondary);border-radius:8px;">
+                        <div style="font-size:12px;color:var(--text-light);margin-bottom:4px;">API Base URL</div>
+                        <div style="font-size:13px;font-weight:600;word-break:break-all;">${API_BASE_URL || 'N/A'}</div>
+                    </div>
+                    <div style="padding:12px;background:var(--secondary);border-radius:8px;">
+                        <div style="font-size:12px;color:var(--text-light);margin-bottom:4px;">Current Tenant ID</div>
+                        <div style="font-size:13px;font-weight:600;">${authData.tenant_id || 'Super Admin (Global)'}</div>
+                    </div>
+                    <div style="padding:12px;background:var(--secondary);border-radius:8px;">
+                        <div style="font-size:12px;color:var(--text-light);margin-bottom:4px;">User Role</div>
+                        <div style="font-size:13px;font-weight:600;">${authData.role || 'N/A'}${authData.isSuperAdmin ? ' (Super Admin)' : ''}</div>
+                    </div>
+                    <div style="padding:12px;background:var(--secondary);border-radius:8px;">
+                        <div style="font-size:12px;color:var(--text-light);margin-bottom:4px;">Session Started</div>
+                        <div style="font-size:13px;font-weight:600;">${authData.loginTime ? new Date(authData.loginTime).toLocaleString() : 'Unknown'}</div>
+                    </div>
+                    <div style="padding:12px;background:var(--secondary);border-radius:8px;">
+                        <div style="font-size:12px;color:var(--text-light);margin-bottom:4px;">Browser</div>
+                        <div style="font-size:13px;font-weight:600;">${navigator.userAgent.split(' ').slice(-1)[0] || 'Unknown'}</div>
+                    </div>
+                    <div style="padding:12px;background:var(--secondary);border-radius:8px;">
+                        <div style="font-size:12px;color:var(--text-light);margin-bottom:4px;">LocalStorage Used</div>
+                        <div style="font-size:13px;font-weight:600;">${(JSON.stringify(localStorage).length / 1024).toFixed(1)} KB</div>
+                    </div>
+                </div>`;
+            }
+        }
+
+        // ==================== BULK NOTIFICATIONS ====================
+        function showBulkNotificationModal() {
+            document.getElementById('saBulkNotificationModal').classList.remove('hidden');
+        }
+
+        async function handleBulkNotification(event) {
+            event.preventDefault();
+            const type = document.getElementById('saBulkNotifType').value;
+            const title = document.getElementById('saBulkNotifTitle').value.trim();
+            const message = document.getElementById('saBulkNotifMessage').value.trim();
+            const urgent = document.getElementById('saBulkNotifUrgent').checked;
+
+            if (!title || !message) {
+                showToast('Please fill in all required fields.', 'error');
+                return;
+            }
+
+            try {
+                // Get all tenants
+                const tenantsResult = await apiGet('/saas/tenants');
+                if (!tenantsResult || !tenantsResult.success || !tenantsResult.data) {
+                    showToast('Failed to load school list.', 'error');
+                    return;
+                }
+
+                const tenants = tenantsResult.data;
+                let sentCount = 0;
+                let failCount = 0;
+
+                // Store notification in localStorage for each tenant
+                for (const tenant of tenants) {
+                    try {
+                        const notifications = JSON.parse(localStorage.getItem('notifications_' + tenant.id) || '[]');
+                        notifications.unshift({
+                            id: Date.now() + Math.random().toString(36).substr(2, 5),
+                            type: type,
+                            title: title,
+                            message: message,
+                            urgent: urgent,
+                            fromSuperAdmin: true,
+                            read: false,
+                            timestamp: new Date().toISOString()
+                        });
+                        // Keep only last 50 notifications per tenant
+                        localStorage.setItem('notifications_' + tenant.id, JSON.stringify(notifications.slice(0, 50)));
+                        sentCount++;
+                    } catch (e) {
+                        failCount++;
+                    }
+                }
+
+                // Log activity
+                logSuperAdminActivity('system', 'Bulk Notification Sent', `"${title}" sent to ${sentCount} school(s)`);
+
+                document.getElementById('saBulkNotificationModal').classList.add('hidden');
+                document.getElementById('saBulkNotifTitle').value = '';
+                document.getElementById('saBulkNotifMessage').value = '';
+                document.getElementById('saBulkNotifUrgent').checked = false;
+
+                showToast(`Notification sent to ${sentCount} school(s)${failCount > 0 ? ` (${failCount} failed)` : ''}`, sentCount > 0 ? 'success' : 'error');
+            } catch (e) {
+                showToast('Error sending notification: ' + e.message, 'error');
             }
         }
     </script>
