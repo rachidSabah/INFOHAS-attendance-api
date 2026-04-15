@@ -45,12 +45,10 @@ async function authenticate(request, env) {
       `SELECT s.*, u.username, u.role, u.full_name, u.tenant_id, u.is_super_admin,
               t.name as tenant_name, t.slug as tenant_slug, t.status as tenant_status,
               t.primary_color, t.secondary_color, t.logo_url, t.language as tenant_language,
-              t.max_students, t.max_users,
-              sub.plan as subscription_plan, sub.status as subscription_status
+              t.max_students, t.max_users
        FROM sessions s 
        JOIN users u ON s.user_id = u.id 
        LEFT JOIN tenants t ON u.tenant_id = t.id
-       LEFT JOIN subscriptions sub ON sub.tenant_id = t.id AND sub.status = 'active'
        WHERE s.token = ? AND s.expires_at > datetime("now")`
     ).bind(token).first();
     return session;
@@ -82,7 +80,7 @@ export default {
 
     // Health check
     if (path === '/api/health') {
-      return jsonResponse({ status: 'ok', timestamp: new Date().toISOString(), version: '2.0-saas' });
+      return jsonResponse({ status: 'ok', timestamp: new Date().toISOString(), version: '2.1' });
     }
 
     // ==================== AUTH ROUTES (no auth required) ====================
@@ -118,11 +116,6 @@ export default {
         await env.DB.prepare(
           'INSERT INTO users (id, username, password, role, full_name, email, tenant_id, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, 1)'
         ).bind(userId, adminEmail, adminPassword, 'admin', adminName, adminEmail, tenantId).run();
-
-        // Create free subscription
-        await env.DB.prepare(
-          'INSERT INTO subscriptions (id, tenant_id, plan, status) VALUES (?, ?, ?, ?)'
-        ).bind(generateId(), tenantId, 'free', 'active').run();
 
         // Create session
         const token = generateId() + generateId();
@@ -266,9 +259,8 @@ export default {
           const tenants = await env.DB.prepare(
             `SELECT t.*, 
               (SELECT COUNT(*) FROM users WHERE tenant_id = t.id AND is_active = 1) as user_count,
-              (SELECT COUNT(*) FROM students WHERE tenant_id = t.id) as student_count,
-              sub.plan, sub.status as subscription_status
-            FROM tenants t LEFT JOIN subscriptions sub ON sub.tenant_id = t.id
+              (SELECT COUNT(*) FROM students WHERE tenant_id = t.id) as student_count
+            FROM tenants t
             ORDER BY t.created_at DESC`
           ).all();
           return jsonResponse({ success: true, data: nullToEmpty(tenants.results) });
@@ -278,7 +270,7 @@ export default {
         if (path.match(/^\/api\/saas\/tenants\/[^/]+$/) && method === 'GET') {
           const id = path.split('/').pop();
           const tenant = await env.DB.prepare(
-            `SELECT t.*, sub.plan, sub.status as subscription_status FROM tenants t LEFT JOIN subscriptions sub ON sub.tenant_id = t.id WHERE t.id = ?`
+            `SELECT t.* FROM tenants t WHERE t.id = ?`
           ).bind(id).first();
           if (!tenant) return errorResponse('Tenant not found', 404);
           return jsonResponse({ success: true, data: nullToEmpty(tenant) });
@@ -393,11 +385,6 @@ export default {
               await env.DB.prepare(`UPDATE ${table} SET tenant_id = ? WHERE tenant_id IS NULL`).bind(defaultTenantId).run();
             } catch(e) {}
           }
-
-          // Create default subscription
-          await env.DB.prepare(
-            'INSERT OR IGNORE INTO subscriptions (id, tenant_id, plan, status) VALUES (?, ?, ?, ?)'
-          ).bind('sub_default_001', defaultTenantId, 'pro', 'active').run();
 
           // Make existing admin a super_admin
           if (adminUser) {
