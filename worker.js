@@ -171,7 +171,9 @@ export default {
       // ==================== STUDENTS ====================
       if (path === '/api/students' && method === 'GET') {
         const students = await env.DB.prepare('SELECT * FROM students ORDER BY created_at DESC').all();
-        return jsonResponse({ success: true, data: students.results });
+        // Filter out corrupted records (empty first_name)
+        const validStudents = students.results.filter(s => (s.first_name || '').trim() !== '');
+        return jsonResponse({ success: true, data: validStudents });
       }
 
       if (path === '/api/students' && method === 'POST') {
@@ -274,6 +276,23 @@ export default {
           ).bind(id, body.student_id, body.date, body.status, body.class || null, body.module || null, body.notes || null, session.user_id).run();
           return jsonResponse({ success: true, data: { id, ...body } }, 201);
         }
+      }
+
+      if (path.match(/^\/api\/attendance\/[^/]+$/) && method === 'PUT') {
+        const id = path.split('/').pop();
+        const body = await request.json();
+        const sets = [];
+        const vals = [];
+        for (const [k, v] of Object.entries(body)) {
+          if (['student_id', 'date', 'status', 'class', 'module', 'notes'].includes(k)) {
+            sets.push(`${k} = ?`);
+            vals.push(v);
+          }
+        }
+        if (sets.length === 0) return errorResponse('No valid fields to update');
+        vals.push(id);
+        await env.DB.prepare(`UPDATE attendance SET ${sets.join(', ')} WHERE id = ?`).bind(...vals).run();
+        return jsonResponse({ success: true });
       }
 
       if (path.match(/^\/api\/attendance\/[^/]+$/) && method === 'DELETE') {
@@ -651,6 +670,43 @@ export default {
           }
         }
         return jsonResponse({ success: true, data: results });
+      }
+
+      // ==================== DATABASE CLEANUP ====================
+      if (path === '/api/cleanup' && method === 'POST') {
+        if (session.role !== 'admin') return errorResponse('Forbidden', 403);
+        try {
+          // Get IDs of corrupted students (empty first_name)
+          const corrupted = await env.DB.prepare("SELECT id FROM students WHERE COALESCE(first_name, '') = '' OR TRIM(first_name) = ''").all();
+          const corruptedIds = corrupted.results.map(s => s.id);
+          let deletedAttendance = 0, deletedIncidents = 0, deletedStudents = 0;
+
+          // Delete dependent records first (to avoid foreign key constraint errors)
+          for (const id of corruptedIds) {
+            try {
+              const attRes = await env.DB.prepare('DELETE FROM attendance WHERE student_id = ?').bind(id).run();
+              deletedAttendance += attRes.meta?.changes || 0;
+            } catch(e) {}
+            try {
+              const incRes = await env.DB.prepare('DELETE FROM incidents WHERE student_id = ?').bind(id).run();
+              deletedIncidents += incRes.meta?.changes || 0;
+            } catch(e) {}
+          }
+
+          // Now delete the corrupted students
+          const result = await env.DB.prepare("DELETE FROM students WHERE COALESCE(first_name, '') = '' OR TRIM(first_name) = ''").run();
+          deletedStudents = result.meta?.changes || 0;
+
+          return jsonResponse({
+            success: true,
+            message: 'Cleanup completed',
+            deletedStudents,
+            deletedAttendance,
+            deletedIncidents
+          });
+        } catch (e) {
+          return errorResponse('Cleanup failed: ' + e.message, 500);
+        }
       }
 
       // ==================== CURRENT USER ====================
