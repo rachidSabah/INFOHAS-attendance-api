@@ -143,3 +143,36 @@ Stage Summary:
 - All function references verified - no missing functions
 - Deployed to Cloudflare Pages
 - Pushed to GitHub
+
+---
+Task ID: 3
+Agent: Main Agent
+Task: Fix dashboard "Présence hebdomadaire" chart not triggering + final fixes
+
+Work Log:
+- Diagnosed why dashboard weekly attendance chart was not rendering:
+  - Missing setTimeout delay (canvas might not be visible yet)
+  - Missing Chart.js loaded check
+  - Missing try/catch around new Chart()
+  - Dashboard layout reordering (applyDashboardLayout) could cause canvas resize issues
+- Fixed renderDashboardChart():
+  - Added setTimeout(300ms) delay for DOM readiness
+  - Added Chart.js loaded check (typeof Chart === 'undefined')
+  - Added try/catch error handling
+  - Added onClick handler to navigate to Reports page (analytics)
+  - Added tooltip callback showing totals
+  - Added cursor:pointer style to chart container
+  - Fixed indentation of Chart config
+- Fixed additional XSS vulnerabilities:
+  - Template name, content, category in messaging page
+  - Admin username in admin users table
+  - Employee department, position, email in employee list
+- All XSS patterns verified clean with comprehensive regex sweep
+- Deployed to Cloudflare Pages
+- Pushed to GitHub
+
+Stage Summary:
+- Dashboard weekly attendance chart now renders correctly with 300ms delay
+- Clicking chart bars navigates to Reports page for detailed analytics
+- All remaining XSS vulnerabilities patched
+- Zero unescaped innerHTML patterns remaining
