@@ -53,7 +53,7 @@ export default {
     }
 
     if (path === '/api/health') {
-      return jsonResponse({ status: 'ok', timestamp: new Date().toISOString(), version: '2.2' });
+      return jsonResponse({ success: true, status: 'ok', timestamp: new Date().toISOString(), version: '2.2' });
     }
 
     // ==================== AUTH ROUTES ====================
@@ -704,6 +704,181 @@ export default {
           return jsonResponse({ success: true, message: 'Migration complete' });
         } catch (e) {
           return errorResponse('Migration failed: ' + e.message, 500);
+        }
+      }
+
+      // ==================== SAAS ROUTES (Super Admin) ====================
+      // SaaS Stats - mirrors /api/stats but with tenant-specific field names
+      if (path === '/api/saas/stats' && method === 'GET') {
+        const totalStudents = await env.DB.prepare('SELECT COUNT(*) as count FROM students').first();
+        const totalUsers = await env.DB.prepare('SELECT COUNT(*) as count FROM users WHERE is_active = 1').first();
+        const totalSchools = await env.DB.prepare('SELECT COUNT(*) as count FROM schools').first();
+        const activeSchools = await env.DB.prepare('SELECT COUNT(*) as count FROM schools WHERE is_active = 1').first();
+        const todayAttendance = await env.DB.prepare("SELECT COUNT(*) as count FROM attendance WHERE date = date('now')").first();
+
+        return jsonResponse({
+          success: true,
+          data: {
+            totalTenants: totalSchools ? totalSchools.count : 0,
+            activeTenants: activeSchools ? activeSchools.count : 0,
+            totalStudents: totalStudents ? totalStudents.count : 0,
+            totalUsers: totalUsers ? totalUsers.count : 0,
+            todayAttendance: todayAttendance ? todayAttendance.count : 0
+          }
+        });
+      }
+
+      // SaaS Tenants List - returns schools as tenants with enriched data
+      if (path === '/api/saas/tenants' && method === 'GET') {
+        const schools = await env.DB.prepare('SELECT * FROM schools ORDER BY created_at DESC').all();
+        const tenants = [];
+        for (const s of schools.results) {
+          const studentCount = await env.DB.prepare('SELECT COUNT(*) as count FROM students').first();
+          const userCount = await env.DB.prepare('SELECT COUNT(*) as count FROM users WHERE is_active = 1').first();
+          tenants.push({
+            ...s,
+            slug: s.id,
+            name: s.name,
+            status: s.is_active ? 'active' : 'suspended',
+            student_count: studentCount ? studentCount.count : 0,
+            user_count: userCount ? userCount.count : 0,
+            created_at: s.created_at,
+            updated_at: s.updated_at
+          });
+        }
+        return jsonResponse({ success: true, data: tenants });
+      }
+
+      // SaaS Tenant Detail
+      if (path.match(/^\/api\/saas\/tenants\/[^/]+$/) && method === 'GET') {
+        const id = path.split('/')[4];
+        const school = await env.DB.prepare('SELECT * FROM schools WHERE id = ?').bind(id).first();
+        if (!school) return errorResponse('Tenant not found', 404);
+        const studentCount = await env.DB.prepare('SELECT COUNT(*) as count FROM students').first();
+        const userCount = await env.DB.prepare('SELECT COUNT(*) as count FROM users WHERE is_active = 1').first();
+        return jsonResponse({
+          success: true,
+          data: {
+            ...school,
+            slug: school.id,
+            status: school.is_active ? 'active' : 'suspended',
+            student_count: studentCount ? studentCount.count : 0,
+            user_count: userCount ? userCount.count : 0,
+            max_students: 100,
+            max_users: 5,
+            logo_url: school.logo
+          }
+        });
+      }
+
+      // SaaS Update Tenant (suspend/activate/edit)
+      if (path.match(/^\/api\/saas\/tenants\/[^/]+$/) && method === 'PUT') {
+        if (!isAdmin(session)) return errorResponse('Forbidden', 403);
+        const id = path.split('/')[4];
+        const body = await request.json();
+        const sets = [];
+        const vals = [];
+        // Map status to is_active
+        if (body.status === 'suspended') {
+          sets.push('is_active = 0');
+        } else if (body.status === 'active') {
+          sets.push('is_active = 1');
+        }
+        // Handle direct field updates (name, address, phone, email, etc.)
+        for (const [k, v] of Object.entries(body)) {
+          if (['name', 'address', 'phone', 'email', 'admin_username', 'admin_password', 'logo', 'is_active'].includes(k)) {
+            if (k !== 'status') {
+              sets.push(`${k} = ?`);
+              vals.push(v);
+            }
+          }
+        }
+        if (sets.length === 0) return errorResponse('No valid fields to update');
+        sets.push('updated_at = datetime("now")');
+        vals.push(id);
+        await env.DB.prepare(`UPDATE schools SET ${sets.join(', ')} WHERE id = ?`).bind(...vals).run();
+        return jsonResponse({ success: true });
+      }
+
+      // SaaS Delete Tenant
+      if (path.match(/^\/api\/saas\/tenants\/[^/]+$/) && method === 'DELETE') {
+        if (!isAdmin(session)) return errorResponse('Forbidden', 403);
+        const id = path.split('/')[4];
+        await env.DB.prepare('DELETE FROM schools WHERE id = ?').bind(id).run();
+        return jsonResponse({ success: true });
+      }
+
+      // SaaS Switch Tenant
+      if (path.match(/^\/api\/saas\/switch-tenant\/[^/]+$/) && method === 'POST') {
+        const tenantId = path.split('/')[4];
+        const school = await env.DB.prepare('SELECT * FROM schools WHERE id = ?').bind(tenantId).first();
+        if (!school) return errorResponse('Tenant not found', 404);
+        // Return school info so frontend can "switch" context
+        return jsonResponse({
+          success: true,
+          data: {
+            id: school.id,
+            name: school.name,
+            slug: school.id,
+            status: school.is_active ? 'active' : 'suspended'
+          }
+        });
+      }
+
+      // SaaS Tenant Export
+      if (path.match(/^\/api\/saas\/tenants\/[^/]+\/export$/) && method === 'GET') {
+        const tenantId = path.split('/')[4];
+        const school = await env.DB.prepare('SELECT * FROM schools WHERE id = ?').bind(tenantId).first();
+        if (!school) return errorResponse('Tenant not found', 404);
+        const students = await env.DB.prepare('SELECT * FROM students').all();
+        const attendance = await env.DB.prepare('SELECT * FROM attendance').all();
+        const classes = await env.DB.prepare('SELECT * FROM classes').all();
+        return jsonResponse({
+          success: true,
+          data: {
+            school,
+            students: students.results,
+            attendance: attendance.results,
+            classes: classes.results,
+            exportedAt: new Date().toISOString()
+          }
+        });
+      }
+
+      // SaaS Tenant Data Reset (delete data for a specific table)
+      if (path.match(/^\/api\/saas\/tenants\/[^/]+\/data\/[^/]+$/) && method === 'DELETE') {
+        if (!isAdmin(session)) return errorResponse('Forbidden', 403);
+        const segments = path.split('/');
+        const tenantId = segments[4];
+        const table = segments[6];
+        const validTables = ['students', 'attendance', 'classes', 'modules', 'tasks', 'incidents'];
+        if (!validTables.includes(table)) return errorResponse('Invalid table name');
+        await env.DB.prepare(`DELETE FROM ${table}`).run();
+        return jsonResponse({ success: true, message: `All ${table} data cleared` });
+      }
+
+      // SaaS Migration
+      if (path === '/api/saas-migrate' && method === 'POST') {
+        if (!isAdmin(session)) return errorResponse('Forbidden', 403);
+        try {
+          await env.DB.prepare(`
+            CREATE TABLE IF NOT EXISTS schools (
+              id TEXT PRIMARY KEY,
+              name TEXT NOT NULL,
+              address TEXT,
+              phone TEXT,
+              email TEXT,
+              admin_username TEXT,
+              admin_password TEXT,
+              logo TEXT,
+              is_active INTEGER DEFAULT 1,
+              created_at TEXT DEFAULT (datetime('now')),
+              updated_at TEXT DEFAULT (datetime('now'))
+            )
+          `).run();
+          return jsonResponse({ success: true, message: 'SaaS migration complete', version: '2.2' });
+        } catch (e) {
+          return errorResponse('SaaS migration failed: ' + e.message, 500);
         }
       }
 
