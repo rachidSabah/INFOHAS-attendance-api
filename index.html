@@ -6783,6 +6783,26 @@
                     };
                     saveToStorage(STORAGE_KEYS.AUTH, auth);
                     
+                    // Save API user to localStorage for persistence across page refreshes
+                    let users = loadFromStorage(STORAGE_KEYS.USERS) || [];
+                    const existingUserIndex = users.findIndex(u => u.id === result.user.id);
+                    const userToSave = {
+                        id: result.user.id,
+                        username: result.user.username,
+                        password: password,
+                        role: result.user.role,
+                        fullName: result.user.full_name || result.user.username,
+                        email: result.user.email || '',
+                        photo: result.user.photo || '',
+                        is_super_admin: result.user.is_super_admin || false
+                    };
+                    if (existingUserIndex >= 0) {
+                        users[existingUserIndex] = userToSave;
+                    } else {
+                        users.push(userToSave);
+                    }
+                    saveToStorage(STORAGE_KEYS.USERS, users);
+                    
                     // Save tenant info for branding
                     if (result.tenant) {
                         saveToStorage('attendance_tenant', result.tenant);
@@ -6935,6 +6955,16 @@
                 migrateUsersToUnifiedSystem();
                 const users = loadFromStorage(STORAGE_KEYS.USERS) || [];
                 currentUser = users.find(u => u.id === auth.userId);
+                // Fallback: if user not found in localStorage but auth has userRole, create minimal user object
+                if (!currentUser && auth.userRole) {
+                    currentUser = {
+                        id: auth.userId,
+                        username: 'user',
+                        role: auth.userRole,
+                        fullName: 'User',
+                        password: auth.password || ''
+                    };
+                }
                 if (currentUser) {
                     // Restore password from auth storage (API users don't have passwords)
                     if (auth.password && !currentUser.password) {

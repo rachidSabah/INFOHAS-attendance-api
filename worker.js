@@ -71,7 +71,7 @@ export default {
         return jsonResponse({
           success: true,
           token,
-          user: { id: user.id, username: user.username, role: user.role, full_name: user.full_name, email: user.email, photo: user.photo }
+          user: { id: user.id, username: user.username, role: user.role, full_name: user.full_name, email: user.email, photo: user.photo, is_super_admin: user.role === 'super_admin' }
         });
       } catch (e) {
         return errorResponse('Login failed: ' + e.message, 500);
